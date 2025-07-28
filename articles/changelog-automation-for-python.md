@@ -360,9 +360,10 @@ Although this project is Python-first, the use of lightweight JavaScript tooling
 ✅ Confirm It’s Working
 Go to your GitHub repo
 
-Click Releases → Drafts (right column)
+Go to https://github.com/bynbb/obk/releases to test generation
 
 You should see a draft named something like v0.1.0 or v$NEXT_PATCH_VERSION
+
 
 
 </gsl-addendum>

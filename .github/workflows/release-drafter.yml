@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   update_release_draft:
+    if: github.event.pull_request.merged == true # should prevent duplicate drafts
     runs-on: ubuntu-latest
     steps:
       - uses: release-drafter/release-drafter@v6
