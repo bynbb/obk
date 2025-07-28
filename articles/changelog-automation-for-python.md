@@ -253,3 +253,7 @@ CHANGELOG.md               # (optional—Release Drafter keeps this up to date)
 By enforcing Conventional Commits, helping contributors with commitizen, and auto-generating your changelog and releases with Release Drafter and GitHub Actions, you’ll save time, prevent errors, and deliver a polished developer experience—no matter how fast your project grows.
 
 * * *
+<gsl-test id="T1">Run `npx commitlint --from HEAD~1` to verify the latest commit follows Conventional Commits.</gsl-test>
+<gsl-test id="T2">Merge a PR into `main` and confirm Release Drafter updates the draft changelog.</gsl-test>
+<gsl-test id="T3">Use `git cz` to create a commit and ensure the prompt enforces commit formatting.</gsl-test>
+<gsl-test id="T4">Check the GitHub Actions tab to see the Release Drafter workflow succeeded.</gsl-test>
