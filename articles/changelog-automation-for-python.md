@@ -142,49 +142,47 @@ Add to your docs:
 1. Create `.github/release-drafter.yml` with category configuration:
     
 
-```yaml
-name-template: 'v$NEXT_PATCH_VERSION'
-tag-template: 'v$NEXT_PATCH_VERSION'
-categories:
-  - title: "🚀 Features"
-    labels:
-      - "feature"
-    pull_request_title:
-      - '^feat:'
-  - title: "🐛 Fixes"
-    labels:
-      - "fix"
-    pull_request_title:
-      - '^fix:'
-  - title: "🧹 Chores"
-    pull_request_title:
-      - '^chore:'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
-```
+    ```yaml
+    name-template: 'v$NEXT_PATCH_VERSION'
+    tag-template: 'v$NEXT_PATCH_VERSION'
+    
+    categories:
+      - title: "🚀 Features"
+        pull_request_title:
+          - '^feat(?:\\([^)]*\\))?:'
+      - title: "🐛 Fixes"
+        pull_request_title:
+          - '^fix(?:\\([^)]*\\))?:'
+      - title: "🧹 Chores"
+        pull_request_title:
+          - '^chore(?:\\([^)]*\\))?:'
+    
+    change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+    ```
 
 2. Add the Release Drafter Action to your workflows (e.g., `.github/workflows/release-drafter.yml`):
     
 
-```yaml
-name: Release Drafter
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    types: [closed]
-
-jobs:
-  update_release_draft:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: release-drafter/release-drafter@v6
-        with:
-          config-name: release-drafter.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
+    ```yaml
+    name: Release Drafter
+    
+    on:
+      push:
+        branches:
+          - main
+      pull_request:
+        types: [closed]
+    
+    jobs:
+      update_release_draft:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: release-drafter/release-drafter@v6
+            with:
+              config-name: release-drafter.yml
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    ```
 
 Every time a PR is merged, a draft release and changelog is updated automatically.
 
