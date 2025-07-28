@@ -268,6 +268,7 @@ By enforcing Conventional Commits, helping contributors with commitizen, and aut
 
 
 <gsl-addendum>
+
 ### 🔧 Addendum: Commit Message Linting in a Python Project
 
 While developing this Python-based application, we identified the need to enforce **Conventional Commit** standards across the team to enable structured commit history, semantic versioning, and automated changelog generation.
@@ -308,26 +309,21 @@ Then added the following to `package.json` to ensure Husky is activated after in
 }
 ```
 
-Next, we manually created the `.husky/commit-msg` hook file:
+Next, we manually created the `.husky/commit-msg` hook file using the updated, **v10-compatible** format:
 
 **On Windows (PowerShell):**
 
 ```powershell
 @'
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 npx --no -- commitlint --edit "$1"
 '@ | Out-File -Encoding utf8 -NoNewline .husky/commit-msg
-
 ```
 
 **On macOS / Linux:**
 
 ```bash
 echo '#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 npx --no -- commitlint --edit "$1"' > .husky/commit-msg
 chmod +x .husky/commit-msg
 ```
@@ -350,10 +346,10 @@ Expected output:
 
 ```bash
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 npx --no -- commitlint --edit "$1"
 ```
+
+> ⚠️ Note: The deprecated Husky bootstrapping line (`. "$(dirname "$0")/_/husky.sh"`) was intentionally omitted for compatibility with Husky v10+.
 
 This ensures all commit messages are validated prior to entry, even in collaborative or CI-driven environments.
 
