@@ -1,0 +1,17 @@
+name-template: 'v$NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
+categories:
+  - title: "🚀 Features"
+    labels:
+      - "feature"
+    pull_request_title:
+      - '^feat:'
+  - title: "🐛 Fixes"
+    labels:
+      - "fix"
+    pull_request_title:
+      - '^fix:'
+  - title: "🧹 Chores"
+    pull_request_title:
+      - '^chore:'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
