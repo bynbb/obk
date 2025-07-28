@@ -355,5 +355,14 @@ This ensures all commit messages are validated prior to entry, even in collabora
 
 Although this project is Python-first, the use of lightweight JavaScript tooling was justified due to the lack of equivalent enforcement tools in the Python ecosystem. This setup is isolated to development workflows and does not impact runtime, packaging, or deployment.
 
+#### Test GitHub Draft changes is working  
+  
+✅ Confirm It’s Working
+Go to your GitHub repo
+
+Click Releases → Drafts (right column)
+
+You should see a draft named something like v0.1.0 or v$NEXT_PATCH_VERSION
+
 
 </gsl-addendum>
