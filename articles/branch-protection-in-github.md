@@ -11,6 +11,8 @@ This guide outlines how to configure branch protection in GitHub using **ruleset
 **Key Settings:**
 
 * **Require pull request before merging:** Enabled
+
+* **Dismiss stale pull request approvals when new commits are pushed** Enabled (New, reviewable commits pushed will dismiss previous pull request review approvals.)
     
 * **Require approvals:** Enabled (number of required approvals can be customized)
     
@@ -53,6 +55,8 @@ This guide outlines how to configure branch protection in GitHub using **ruleset
 **Key Settings:**
 
 * **Require pull request before merging:** Enabled
+
+* **Dismiss stale pull request approvals when new commits are pushed** Enabled (New, reviewable commits pushed will dismiss previous pull request review approvals.)
     
 * **Require status checks to pass before merging:** Enabled (specify exact required checks, e.g., `CI`, `lint`)
     
