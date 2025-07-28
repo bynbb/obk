@@ -253,3 +253,109 @@ CHANGELOG.md               # (optional—Release Drafter keeps this up to date)
 By enforcing Conventional Commits, helping contributors with commitizen, and auto-generating your changelog and releases with Release Drafter and GitHub Actions, you’ll save time, prevent errors, and deliver a polished developer experience—no matter how fast your project grows.
 
 * * *
+<gsl-test id="T1">
+
+- Run `npx commitlint --from HEAD~1` to verify the latest commit follows Conventional Commits.</gsl-test>
+<gsl-test id="T2">
+
+- Merge a PR into `main` and confirm Release Drafter updates the draft changelog.</gsl-test>
+<gsl-test id="T3">
+
+- Use `git cz` to create a commit and ensure the prompt enforces commit formatting.</gsl-test>
+<gsl-test id="T4">
+
+- Check the GitHub Actions tab to see the Release Drafter workflow succeeded.</gsl-test>
+
+
+<gsl-addendum>
+
+### 🔧 Addendum: Commit Message Linting in a Python Project
+
+While developing this Python-based application, we identified the need to enforce **Conventional Commit** standards across the team to enable structured commit history, semantic versioning, and automated changelog generation.
+
+However, at the time of implementation, **no mature Python-native tooling existed** to lint commit messages against the Conventional Commit specification in a way that:
+
+* integrates cleanly with Git hooks (e.g., `commit-msg`)
+* supports CI workflows
+* provides extensibility and official presets
+
+#### 🛠 Solution
+
+To address this, we introduced a **minimal Node.js-based dev dependency**, using the industry-standard tool:
+
+```bash
+npm install --save-dev @commitlint/cli @commitlint/config-conventional husky@^9.1.7
+```
+
+We created a `commitlint.config.cjs` file to extend the conventional ruleset:
+
+```js
+module.exports = {
+  extends: ['@commitlint/config-conventional'],
+};
+```
+
+To enforce this across commits, we initialized Husky and configured it manually (as `husky add` is deprecated in v9+):
+
+```bash
+npx husky install
+```
+
+Then added the following to `package.json` to ensure Husky is activated after install:
+
+```json
+"scripts": {
+  "prepare": "husky install"
+}
+```
+
+Next, we manually created the `.husky/commit-msg` hook file using the updated, **v10-compatible** format:
+
+**On Windows (PowerShell):**
+
+```powershell
+@'
+#!/bin/sh
+npx --no -- commitlint --edit "$1"
+'@ | Out-File -Encoding utf8 -NoNewline .husky/commit-msg
+```
+
+**On macOS / Linux:**
+
+```bash
+echo '#!/bin/sh
+npx --no -- commitlint --edit "$1"' > .husky/commit-msg
+chmod +x .husky/commit-msg
+```
+
+And verified the hook script was installed with the expected content:
+
+**On macOS / Linux:**
+
+```bash
+cat .husky/commit-msg
+```
+
+**On Windows (PowerShell):**
+
+```powershell
+Get-Content .husky/commit-msg
+```
+
+Expected output:
+
+```bash
+#!/bin/sh
+npx --no -- commitlint --edit "$1"
+```
+
+> ⚠️ Note: The deprecated Husky bootstrapping line (`. "$(dirname "$0")/_/husky.sh"`) was intentionally omitted for compatibility with Husky v10+.
+
+This ensures all commit messages are validated prior to entry, even in collaborative or CI-driven environments.
+
+#### 📌 Rationale
+
+Although this project is Python-first, the use of lightweight JavaScript tooling was justified due to the lack of equivalent enforcement tools in the Python ecosystem. This setup is isolated to development workflows and does not impact runtime, packaging, or deployment.
+
+
+</gsl-addendum>
