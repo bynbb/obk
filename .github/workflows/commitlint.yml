@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   commitlint:
-    runs-on: self-hosted
+    runs-on: self-hosted  # or 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,22 +18,16 @@ jobs:
       - name: Install Commitlint
         run: npm install --global @commitlint/{cli,config-conventional}
 
-      - name: "Debug: print environment, working dir, and config location"
-        run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          pwd
-          ls -l
-          ls -l .commitlint.config.js || echo "Not in this dir"
-          ls -l ../.commitlint.config.js || echo "Not in parent dir"
-          ls -l ../../.commitlint.config.js || echo "Not in grandparent dir"
-        working-directory: ${{ github.workspace }}
-
       - name: Lint PR commits
         if: github.event_name == 'pull_request'
         run: |
-          echo "Base SHA: ${{ github.event.pull_request.base.sha }}"
-          echo "Head SHA: ${{ github.event.pull_request.head.sha }}"
-          commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --config commitlint.config.js
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            npx commitlint --from "$HEAD_SHA" --config commitlint.config.js
+          else
+            npx commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --config commitlint.config.js
+          fi
         working-directory: ${{ github.workspace }}
 
       - name: Lint pushed commits
