@@ -6,8 +6,16 @@ jobs:
   commitlint:
     runs-on: self-hosted
     steps:
-      - name: Commit lint
-        uses: wagoid/commitlint-github-action@v5
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          configFile: .commitlint.config.js
-          platform: linux/arm64
+          node-version: 18
+
+      - name: Install Commitlint
+        run: npm install --global @commitlint/{cli,config-conventional}
+
+      - name: Lint commit messages
+        run: |
+          commitlint --from=HEAD~10 --to=HEAD --config .commitlint.config.js
