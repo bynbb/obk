@@ -41,5 +41,5 @@ jobs:
         run: |
           echo "From: ${{ github.event.before }}"
           echo "To:   ${{ github.sha }}"
-          commitlint --from ${{ github.event.before }} --to ${{ github.sha }} --config .commitlint.config.js
+          commitlint --from ${{ github.event.before }} --to ${{ github.sha }} --config commitlint.config.js
         working-directory: ${{ github.workspace }}
