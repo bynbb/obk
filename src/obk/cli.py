@@ -1,8 +1,26 @@
-from typer import Typer, echo
+"""Command-line interface for obk."""
 
-app = Typer(add_completion=False)
+from __future__ import annotations
 
-@app.command()
-def hello(name: str = "world"):
-    """A stub command that prints a friendly greeting."""
-    echo(f"Hello, {name}!")
+import argparse
+
+
+def _cmd_hello_world(_: argparse.Namespace) -> None:
+    print("hello world")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="obk")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    hello_parser = subparsers.add_parser(
+        "hello-world", help="Print hello world", description="Print hello world"
+    )
+    hello_parser.set_defaults(func=_cmd_hello_world)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    args.func(args)
