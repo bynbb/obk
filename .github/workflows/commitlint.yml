@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   commitlint:
-    runs-on: self-hosted  # Or 'ubuntu-latest'
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,7 +19,6 @@ jobs:
         run: npm install --global @commitlint/{cli,config-conventional}
 
       - name: Debug: print environment, working dir, and config location
-        working-directory: ${{ github.workspace }}
         run: |
           echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
           pwd
@@ -27,19 +26,20 @@ jobs:
           ls -l .commitlint.config.js || echo "Not in this dir"
           ls -l ../.commitlint.config.js || echo "Not in parent dir"
           ls -l ../../.commitlint.config.js || echo "Not in grandparent dir"
+        working-directory: ${{ github.workspace }}
 
       - name: Lint PR commits
         if: github.event_name == 'pull_request'
-        working-directory: ${{ github.workspace }}
         run: |
           echo "Base SHA: ${{ github.event.pull_request.base.sha }}"
           echo "Head SHA: ${{ github.event.pull_request.head.sha }}"
           commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --config .commitlint.config.js
+        working-directory: ${{ github.workspace }}
 
       - name: Lint pushed commits
         if: github.event_name == 'push'
-        working-directory: ${{ github.workspace }}
         run: |
           echo "From: ${{ github.event.before }}"
           echo "To:   ${{ github.sha }}"
           commitlint --from ${{ github.event.before }} --to ${{ github.sha }} --config .commitlint.config.js
+        working-directory: ${{ github.workspace }}
