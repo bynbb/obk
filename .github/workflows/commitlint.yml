@@ -4,11 +4,11 @@ on: [push, pull_request]
 
 jobs:
   commitlint:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Or 'ubuntu-latest' if not using self-hosted runner
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Ensure full history for commit ranges
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -18,14 +18,19 @@ jobs:
       - name: Install Commitlint
         run: npm install --global @commitlint/{cli,config-conventional}
 
+      - name: Debug - List repo root contents
+        run: ls -l
+
       - name: Lint PR commits
         if: github.event_name == 'pull_request'
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=100
+          echo "Base SHA: ${{ github.event.pull_request.base.sha }}"
+          echo "Head SHA: ${{ github.event.pull_request.head.sha }}"
           commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --config .commitlint.config.js
 
       - name: Lint pushed commits
         if: github.event_name == 'push'
         run: |
+          echo "From: ${{ github.event.before }}"
+          echo "To:   ${{ github.sha }}"
           commitlint --from ${{ github.event.before }} --to ${{ github.sha }} --config .commitlint.config.js
-
