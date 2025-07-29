@@ -1,12 +1,14 @@
 name: Commit Lint
 
-on: [pull_request]
+on: [push, pull_request]
 
 jobs:
   commitlint:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -16,6 +18,14 @@ jobs:
       - name: Install Commitlint
         run: npm install --global @commitlint/{cli,config-conventional}
 
-      - name: Lint commit messages
+      - name: Lint PR commits
+        if: github.event_name == 'pull_request'
         run: |
-          commitlint --from=HEAD~10 --to=HEAD --config .commitlint.config.js
+          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=100
+          commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --config .commitlint.config.js
+
+      - name: Lint pushed commits
+        if: github.event_name == 'push'
+        run: |
+          commitlint --from ${{ github.event.before }} --to ${{ github.sha }} --config .commitlint.config.js
+
