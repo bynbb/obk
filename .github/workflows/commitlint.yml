@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   commitlint:
-    runs-on: self-hosted  # Change to 'ubuntu-latest' if not self-hosted
+    runs-on: self-hosted  # Or 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
         with:
