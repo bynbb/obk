@@ -4,7 +4,7 @@ This repository uses prompts to document and trace development tasks. Prompts ar
 
 ## Prompts to Update
 
-- <gsl-prompt-id>20250728T141621-0400</gsl-prompt-id>
+- <gsl-prompt-id>N/A</gsl-prompt-id>
 
 Agents MUST automatically add any prompt files whose ID includes today's date
 (formatted as `YYYYMMDD`) to the list above. This ensures newly generated
@@ -19,7 +19,7 @@ prompts from the current day are always updated without manual intervention.
 ## Commit Tracking
 
 Agents MUST track which commits have been documented in the prompt with ID
-<gsl-prompt-id>20250728T141621-0400</gsl-prompt-id>. After updating the prompt to describe a commit, append
+<gsl-prompt-id>N/A</gsl-prompt-id>. After updating the prompt to describe a commit, append
 that commit hash to the **Documented Commits** list below. To discover
 undocumented commits, compare the hashes in this list with `git log --pretty=%H`.
 Only commits not present in the list require prompt updates. In addition,
