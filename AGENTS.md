@@ -5,6 +5,7 @@ This repository uses prompts to document and trace development tasks. Prompts ar
 ## Prompts to Update
 
 - <gsl-prompt-id>N/A</gsl-prompt-id>
+- <gsl-prompt-id>20250729T145215-0400</gsl-prompt-id>
 
 Agents MUST automatically add any prompt files whose ID includes today's date
 (formatted as `YYYYMMDD`) to the list above. This ensures newly generated
@@ -48,3 +49,4 @@ branch naming or stacking are enforced here.
 - f35652058bed6794dd00d6432f2ae81a6980ff07
 - ea1a04aef0e11407db1d94d0f1692ea0bfa2848b
 - bea7eeef689a3ac7863217007d71fc0fb4a230c4
+- 8fb044dd0e01be9a7ca426966341573a3bfc0aed
