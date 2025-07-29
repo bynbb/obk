@@ -6,7 +6,6 @@ This repository uses prompts to document and trace development tasks. Prompts ar
 
 - <gsl-prompt-id>20250729T145215</gsl-prompt-id>
 
-
 Agents MUST automatically add any prompt files whose ID includes today's date
 (formatted as `YYYYMMDD`) to the list above. This ensures newly generated
 prompts from the current day are always updated with minimal manual intervention.
@@ -25,3 +24,4 @@ branch that depends on another, make at least one commit on the new branch
 before opening the next branch in the stack. This preserves the intended branch
 order in tools that visualize history. Apart from this, no additional rules on
 branch naming or stacking are enforced here.
+

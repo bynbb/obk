@@ -16,6 +16,7 @@ class CalculationError(ObkError):
     """Raised when a calculation cannot be performed."""
 
 
+
 def _cmd_hello_world(_: argparse.Namespace) -> None:
     print("hello world")
 
@@ -29,6 +30,7 @@ def _cmd_divide(args: argparse.Namespace) -> None:
 
 def _cmd_fail(_: argparse.Namespace) -> None:
     raise RuntimeError("boom")
+
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -57,6 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
         "fail", help="Trigger an unhandled exception", description="Fail hard"
     )
     fail_parser.set_defaults(func=_cmd_fail)
+
     return parser
 
 
