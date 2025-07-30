@@ -1,7 +1,9 @@
-# GSL Prompt Template for Codex Agents
+# Prompt Template for Codex Agents
 
-This article provides a ready-to-use template for creating consistent, maintainable GSL prompt files for Codex agent workflows.
+This article provides a ready-to-use template for creating consistent, maintainable prompt files for Codex agent workflows.
 Each section is commented for clarity. Simply fill in the placeholders to match your specific task.
+
+This template uses GSL elements for reportability.
 
 ---
 
