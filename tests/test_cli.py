@@ -120,9 +120,11 @@ def test_module_invocation(tmp_path):
     )
     assert result.stdout.strip() == "2.0"
 
+
 class MockGreeter:
     def hello(self) -> str:
         return "[mock] hi"
+
 
 class MockDivider:
     def divide(self, a: float, b: float) -> float:
@@ -151,3 +153,48 @@ def test_container_override_divider(tmp_path, capsys):
     cli.run(["divide", "1", "3"])
     captured = capsys.readouterr()
     assert captured.out.strip() == "42"
+
+
+def test_greet_excited(tmp_path):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    result = subprocess.run(
+        [sys.executable, "-m", "obk", "greet", "Ada", "--excited"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    assert result.stdout.strip() == "Hello, Ada!!!"
+
+
+def test_greet_default(tmp_path):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    result = subprocess.run(
+        [sys.executable, "-m", "obk", "greet", "Ada"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    assert result.stdout.strip() == "Hello, Ada."
+
+
+class MockGreeterGreet:
+    def greet(self, name: str, excited: bool = False) -> str:
+        return f"[mock greet] {name} {'!!!' if excited else ''}".strip()
+
+
+def test_container_override_greeter_greet(tmp_path, capsys):
+    from obk.containers import Container
+    from obk.cli import ObkCLI
+
+    container = Container()
+    container.greeter.override(MockGreeterGreet())
+    cli = ObkCLI(container=container, log_file=tmp_path / "log.log")
+    cli.run(["greet", "Ada", "--excited"])
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "[mock greet] Ada !!!"

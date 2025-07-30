@@ -47,6 +47,9 @@ Ensure the `README.md` at the repository root exists and accurately summarizes t
 ```markdown
 # obk
 
+> ⚠️ This project is in early development (pre-release/alpha).  
+> The current release is a “hello world” scaffold. APIs and behavior will change rapidly as features are added over the coming weeks.
+
 Minimal CLI for [brief description: e.g., "prompt-driven development", customize based on codebase].
 
 ## Installation
