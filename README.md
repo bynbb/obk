@@ -1,18 +1,35 @@
-# OBK
+# obk
 
-This project demonstrates a small command line interface with a bulletproof
-pytest setup.  Tests live under `tests/` and the `pytest.ini` configuration
-ensures coverage reporting and seamless imports.
+Minimal CLI demonstrating dependency injection and error-handled commands.
 
-The CLI uses the [`dependency-injector`](https://pypi.org/project/dependency-injector/) library
-to wire service classes. See `src/obk/containers.py` for the DI container.
-
-Run the tests with:
+## Installation
 
 ```bash
-pytest
+pip install obk-cli
 ```
 
-This will execute the full suite with coverage enabled by default.
+## Quickstart
 
+```bash
+obk hello-world
+obk divide 4 2
+```
 
+## Features
+
+* `hello-world` prints a greeting
+* `divide` divides two numbers with zero-checking
+* `greet` greets by name with optional excitement
+* `fail` triggers a fatal error for testing
+
+## Usage
+
+For help on available commands:
+
+```bash
+obk --help
+```
+
+## License
+
+MIT
