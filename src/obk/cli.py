@@ -7,36 +7,12 @@ import logging
 import sys
 from pathlib import Path
 
-
-class ObkError(Exception):
-    """Base error for the obk CLI."""
-
-
-class DivisionByZeroError(ObkError):
-    """Raised when attempting to divide by zero."""
-
-
-class FatalError(ObkError):
-    """Raised to trigger a fatal failure."""
+from .containers import Container
+from .services import DivisionByZeroError, FatalError
 
 
 LOG_FILE = Path("obk.log")
 
-
-class Greeter:
-    """Simple greeter service."""
-
-    def hello(self) -> str:
-        return "hello world"
-
-
-class Divider:
-    """Divider service."""
-
-    def divide(self, a: float, b: float) -> float:
-        if b == 0:
-            raise DivisionByZeroError("cannot divide by zero")
-        return a / b
 
 
 def configure_logging(log_file: Path) -> None:
@@ -64,19 +40,21 @@ sys.excepthook = _global_excepthook
 
 
 class ObkCLI:
-    """Class-based CLI implementation."""
+    """Class-based CLI implementation using dependency injection."""
 
-    def __init__(self, log_file: Path = LOG_FILE) -> None:
+    def __init__(self, log_file: Path = LOG_FILE, container: Container | None = None) -> None:
+        self.container = container or Container()
+        self.container.config.log_file.from_value(log_file)
         self.log_file = log_file
-        self.greeter = Greeter()
-        self.divider = Divider()
 
     # command implementations -------------------------------------------------
     def _cmd_hello_world(self, _: argparse.Namespace) -> None:
-        print(self.greeter.hello())
+        greeter = self.container.greeter()
+        print(greeter.hello())
 
     def _cmd_divide(self, args: argparse.Namespace) -> None:
-        result = self.divider.divide(args.a, args.b)
+        divider = self.container.divider()
+        result = divider.divide(args.a, args.b)
         logging.getLogger(__name__).info(
             "Divide %s by %s = %s", args.a, args.b, result
         )
@@ -121,7 +99,8 @@ class ObkCLI:
     def run(self, argv: list[str] | None = None) -> None:
         parser = self.build_parser()
         args = parser.parse_args(argv)
-        configure_logging(args.logfile)
+        self.container.config.log_file.from_value(args.logfile)
+        configure_logging(self.container.config.log_file())
         try:
             args.func(args)
         except DivisionByZeroError as exc:
