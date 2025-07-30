@@ -151,3 +151,16 @@ def test_container_override_divider(tmp_path, capsys):
     cli.run(["divide", "1", "3"])
     captured = capsys.readouterr()
     assert captured.out.strip() == "42"
+
+def test_greet_excited(tmp_path):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    result = subprocess.run(
+        [sys.executable, "-m", "obk", "greet", "Ada", "--excited"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    assert result.stdout.strip() == "Hello, Ada!!!"
