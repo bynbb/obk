@@ -119,3 +119,35 @@ def test_module_invocation(tmp_path):
         check=True,
     )
     assert result.stdout.strip() == "2.0"
+
+class MockGreeter:
+    def hello(self) -> str:
+        return "[mock] hi"
+
+class MockDivider:
+    def divide(self, a: float, b: float) -> float:
+        return 42
+
+
+def test_container_override_greeter(tmp_path, capsys):
+    from obk.containers import Container
+    from obk.cli import ObkCLI
+
+    container = Container()
+    container.greeter.override(MockGreeter())
+    cli = ObkCLI(container=container, log_file=tmp_path / "log.log")
+    cli.run(["hello-world"])
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "[mock] hi"
+
+
+def test_container_override_divider(tmp_path, capsys):
+    from obk.containers import Container
+    from obk.cli import ObkCLI
+
+    container = Container()
+    container.divider.override(MockDivider())
+    cli = ObkCLI(container=container, log_file=tmp_path / "log.log")
+    cli.run(["divide", "1", "3"])
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "42"

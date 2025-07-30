@@ -1,3 +1,8 @@
+---
+
+# NOT NEEDED FOR OBK. SEE Q&A AFTER ARTICLE
+----------------------------------------------
+
 # How to Implement Event‑Driven Architecture and Domain Events in Python
 
 Event‑Driven Architecture (EDA) has become a mainstream approach for building responsive, loosely‑coupled systems that can evolve and scale independently. Python’s rich ecosystem—ranging from `asyncio` to production‑grade brokers such as Kafka and RabbitMQ—makes it an excellent language for adopting EDA both inside a single application and across a fleet of micro‑services.
@@ -278,3 +283,72 @@ Choose a dedicated **Event Store DB** (EventStoreDB, Axon) if your throughput is
 **Conclusion**
 
 Implementing Event‑Driven Architecture and domain events in Python is a journey of progressive decoupling. Begin with clear, immutable domain events and an in‑memory bus. As your needs outgrow a single process, reach for asynchronous brokers like RabbitMQ or Kafka, and treat infrastructure concerns—retries, idempotency, observability—as first‑class citizens. With disciplined event design and Python’s vibrant toolkit, you can build systems that are not only scalable and resilient, but also reflect the language of your business.
+
+## **Q&A: Should OBK Adopt Event-Driven Architecture (EDA)?**
+
+### **Q: Can an Event-Driven Architecture (EDA) be implemented in a CLI like OBK?**
+
+**A:**  
+Yes. There’s nothing technically preventing OBK (or any Python CLI) from implementing EDA patterns. You could wire up an in-process event bus, or even emit events to external brokers (like RabbitMQ or Kafka) if the CLI needs to orchestrate other systems or processes. The EDA article demonstrates both in-memory and async event buses, and these could be adapted for OBK if needed.
+
+* * *
+
+### **Q: Is EDA a good fit for OBK’s current and future architecture?**
+
+**A:**  
+Not right now, and likely not for the foreseeable future—unless OBK evolves into a complex orchestrator of asynchronous workflows or external services.
+
+* **OBK is a CLI:** Each invocation is short-lived and synchronous. Most commands perform local actions, print results, and exit.
+    
+* **Dependency injection is already used:** OBK uses a DI container to manage and decouple services (like `Greeter`, `Divider`). This pattern already provides the core modularity and testability needed for scalable CLI development.
+    
+* **Commands are modular and testable:** Each command can be developed, tested, and extended without EDA overhead.
+    
+* **Typer (or argparse) provides extensibility:** With frameworks like Typer, it’s straightforward to add and organize subcommands. Typer also makes it easy to inject dependencies and scale up the CLI structure as new commands are added.
+    
+* **EDA adds complexity:** Introducing EDA (event schemas, bus management, async handling, brokers) is only justified if you have a concrete need for decoupling _across_ plugins, long-running background tasks, or distributed service orchestration. For OBK’s current model, this is premature.
+    
+
+* * *
+
+### **Q: Is EDA common in Python CLI applications?**
+
+**A:**  
+No, not for tools like OBK.  
+Event-driven design is prevalent in servers, microservices, and some plugin-heavy frameworks, but almost never in CLI tools that run, complete a task, and exit. Big CLIs (like git, kubectl, poetry) use plugin hooks or command dispatch, but don’t wire up event brokers or publish/subscribe systems internally. Most use modular design and, at most, simple hooks for extensibility.
+
+* * *
+
+### **Q: What’s the best way for OBK to remain scalable and maintainable as the number of commands grows?**
+
+**A:**
+
+* **Stick with dependency injection:** Continue using DI to keep command logic and services loosely coupled and easy to test.
+    
+* **Consider Typer for rapid scaling:** If you’re not already using it, Typer is designed for scalable, maintainable CLI apps—automatic help, subcommand registration, type hints, and easy integration with your DI pattern.
+    
+* **Focus on code quality:** Maintain high test coverage, address linter/formatter warnings (`black`, `ruff`), and prune unused dependencies.
+    
+* **Plugins before EDA:** If you need to support third-party extensions or internal plugins, consider a plugin registry or loading pattern before reaching for event buses.
+    
+* **Add EDA _only_ if you need async orchestration:** If OBK ever needs to trigger long-running, cross-system workflows (background jobs, microservice coordination), follow the EDA article’s progression: start with a simple in-memory event bus, and reach for async or broker-backed solutions only when absolutely necessary.
+    
+
+* * *
+
+### **Q: Are there any code or architecture changes needed now?**
+
+**A:**
+
+* **Clean up dependencies:** If `typer[all]` is declared but not used, remove it to slim the package.
+    
+* **Keep up with formatting/linting:** Run `black` and fix `ruff` warnings to maintain code quality.
+    
+* **Maintain testing discipline:** Current subprocess-based CLI tests are good for validating behavior from the entry point. Keep test coverage high as new commands are added.
+    
+
+* * *
+
+### **Summary**
+
+> **OBK already uses modern, scalable patterns (DI, modular commands, good testing). For 99% of CLI use cases—including large, extensible tools—this is enough. Only add event-driven architecture if you face a real need for asynchronous workflows or cross-process orchestration. Until then, keep it simple and focused.**

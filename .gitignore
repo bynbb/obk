@@ -3,6 +3,9 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# custom logs 
+obk.log
+
 # dotenv files
 .env
 
