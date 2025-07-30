@@ -15,27 +15,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      
-      - name: Create virtual environment & Install dependencies
-        run: |
-          python3 -m venv .venv                 # Create virtual environment
-            
-          # Activate virtual environment based on OS
-          if [ "$(uname)" == "Darwin" ] || [ "$(uname)" == "Linux" ]; then
-            source .venv/bin/activate           # macOS/Linux
-          else
-            .\.venv\Scripts\activate            # Windows
-          fi
-        
-          python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest
-
       - name: Install dependencies and run tests
         run: |
-          python3 -m venv .venv
+          python -m venv .venv
           source .venv/bin/activate
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest
+          pip install -e .[test]
           pytest -q
