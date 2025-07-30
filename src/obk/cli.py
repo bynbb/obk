@@ -17,8 +17,9 @@ from .services import DivisionByZeroError, FatalError
 LOG_FILE = Path("obk.log")
 
 
-
 def configure_logging(log_file: Path) -> None:
+    """Configure root logging to write to ``log_file``."""
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
@@ -26,7 +27,10 @@ def configure_logging(log_file: Path) -> None:
     )
 
 
-def _global_excepthook(exc_type, exc_value, exc_tb) -> None:
+def _global_excepthook(
+    exc_type: type[BaseException], exc_value: BaseException, exc_tb
+) -> None:
+    """Log uncaught exceptions and exit."""
     if issubclass(exc_type, SystemExit):
         sys.__excepthook__(exc_type, exc_value, exc_tb)
         return
@@ -45,7 +49,9 @@ sys.excepthook = _global_excepthook
 class ObkCLI:
     """Typer-based CLI with dependency injection."""
 
-    def __init__(self, log_file: Path = LOG_FILE, container: Container | None = None) -> None:
+    def __init__(
+        self, log_file: Path = LOG_FILE, container: Container | None = None
+    ) -> None:
         self.container = container or Container()
         self.log_file = log_file
 
@@ -77,7 +83,9 @@ class ObkCLI:
         )(self._cmd_greet)
 
     # callback ---------------------------------------------------------------
-    def _callback(self, logfile: Path = typer.Option(LOG_FILE, help="Path to the log file")) -> None:
+    def _callback(
+        self, logfile: Path = typer.Option(LOG_FILE, help="Path to the log file")
+    ) -> None:
         self.container.config.log_file.from_value(logfile)
         configure_logging(self.container.config.log_file())
 
@@ -96,10 +104,8 @@ class ObkCLI:
         raise FatalError("intentional failure")
 
     def _cmd_greet(self, name: str, excited: bool = False) -> None:
-        if excited:
-            typer.echo(f"Hello, {name}!!!")
-        else:
-            typer.echo(f"Hello, {name}.")
+        greeter = self.container.greeter()
+        typer.echo(greeter.greet(name, excited))
 
     # runner ---------------------------------------------------------------
     def run(self, argv: list[str] | None = None) -> None:
