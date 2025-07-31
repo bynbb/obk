@@ -1,80 +1,65 @@
-# **How to Publish a Python Package to PyPI**
+# **How to Publish obk to PyPI**
 
 ## **1. Prepare Your Project Structure**
 
-Your project should look like this:
-
+Your `obk` repository uses the modern **src layout**:
 ```
-myproject/
+obk/
 ├── pyproject.toml
 ├── README.md
 ├── LICENSE
-├── myproject/
-│   ├── __init__.py
-│   └── ... (other modules)
+├── src/
+│   └── obk/
+│       ├── __init__.py
+│       └── ... (modules)
 └── tests/
-    └── ... (optional)
+    └── ...
 ```
 
-* The **outer `myproject/`** is your repo root.
-    
-* The **inner `myproject/`** is your Python package (should be importable as `import myproject`).
-    
+* The repo root is **`obk/`**.
+* The package lives under **`src/obk/`** so it can be imported with `import obk`.
 
 * * *
 
 ## **2. Create `pyproject.toml`**
 
-This file is now the _standard_ way to specify build system and metadata.
-
-Example **pyproject.toml** for a pure Python package:
+`pyproject.toml` holds all build and metadata information. A simplified version for this project looks like:
 
 ```toml
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "myproject"
+name = "obk-cli"
 version = "0.1.0"
-description = "Short description of your project."
+description = "A scalable hello-world CLI starter. This is a pre-release/alpha version for initial feedback and CI testing. Not for production use."
 readme = "README.md"
-requires-python = ">=3.7"
-license = { file = "LICENSE" }
-authors = [
-  { name="Your Name", email="your@email.com" }
-]
+requires-python = ">=3.9"
+authors = [{ name = "Your Name", email = "you@example.com" }]
 dependencies = [
-  # "requests >=2.0.0",
+    "typer>=0.12",
+    "dependency-injector>=4.41",
 ]
 
-[project.urls]
-Homepage = "https://github.com/yourusername/myproject"
-Repository = "https://github.com/yourusername/myproject"
+[project.scripts]
+obk = "obk.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["myproject"]
+packages = ["src/obk"]
 ```
 
-* Replace `"myproject"` with your actual project name.
-    
-* Adjust the dependencies and metadata as needed.
-    
+Adjust metadata such as author information as needed.
 
 * * *
 
 ## **3. Build Your Package**
 
-First, **install build tools** (in a virtualenv is best):
+Install Hatch and build from the project root:
 
 ```bash
-python -m pip install --upgrade build
-```
-
-Then **build your package** (from your project root):
-
-```bash
-python -m build
+python -m pip install --upgrade hatch
+hatch build
 ```
 
 This creates a `dist/` directory with `.tar.gz` and `.whl` files.
@@ -84,70 +69,57 @@ This creates a `dist/` directory with `.tar.gz` and `.whl` files.
 ## **4. Register and Set Up PyPI Account**
 
 * Go to [https://pypi.org/account/register/](https://pypi.org/account/register/)
-    
 * Verify your email.
-    
 * **(Optional but recommended)**: Enable two-factor authentication.
-    
 
 * * *
 
 ## **5. Upload to PyPI with Twine**
 
-Install Twine:
+Install Twine if you haven't already:
 
 ```bash
 python -m pip install --upgrade twine
 ```
 
-Upload your package:
+Upload the package:
 
 ```bash
 python -m twine upload dist/*
 ```
 
-* Enter your PyPI username and password when prompted.
-    
+Enter your PyPI credentials when prompted.
 
 * * *
 
 ## **6. Verify Your Package**
 
-* Go to `https://pypi.org/project/myproject/` (replace with your name).
-    
+* Visit `https://pypi.org/project/obk-cli/`.
 * Try installing it:
-    
-    ```bash
-    pip install myproject
-    ```
-    
+
+```bash
+pip install obk-cli
+```
 
 * * *
 
 ## **7. Tips and Best Practices**
 
-* **Choose a unique name!**  
-    Check availability by visiting `https://pypi.org/project/<your-package-name>/`.
-    
-* **Use underscores in your import name**, but hyphens are fine for the PyPI package name.
-    
-* **Include a license** and a good README.md.
-    
-* **Use versioning** (`0.1.0`, `1.0.0`, etc.) and bump the version for every new release.
-    
-* **Test locally** before uploading.  
-    You can test installation from the built `.whl`:
-    
-    ```bash
-    pip install dist/myproject-0.1.0-py3-none-any.whl
-    ```
-    
+* **Choose a unique name**—check availability at `https://pypi.org/project/<your-package-name>/`.
+* **Use underscores in your import name**; hyphens are fine for the PyPI distribution name.
+* **Include a license** and a clear README.
+* **Bump the version** (`0.1.0`, `1.0.0`, etc.) for every release.
+* **Test locally** before uploading. You can install from the built wheel:
+
+```bash
+pip install dist/obk_cli-0.1.0-py3-none-any.whl
+```
 
 * * *
 
 ## **8. Optional: Test Uploads to TestPyPI**
 
-To avoid polluting the real PyPI while experimenting, use TestPyPI:
+To experiment without affecting the real index:
 
 ```bash
 python -m twine upload --repository testpypi dist/*
@@ -156,7 +128,7 @@ python -m twine upload --repository testpypi dist/*
 Install from TestPyPI:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ myproject
+pip install --index-url https://test.pypi.org/simple/ obk-cli
 ```
 
 * * *
@@ -164,8 +136,11 @@ pip install --index-url https://test.pypi.org/simple/ myproject
 ## **9. Useful Resources**
 
 * Packaging Python Projects — Official Guide
-    
 * [PyPI — Managing Projects](https://pypi.org/help/)
-    
 * Hatchling documentation
-    
+
+### How to test these instructions
+
+1. Run `hatch build` to create `dist/`.
+2. Upload to TestPyPI with `python -m twine upload --repository testpypi dist/*`.
+3. Install using the TestPyPI command above and run `obk --help`.
