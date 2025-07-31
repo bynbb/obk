@@ -1,5 +1,13 @@
 # AGENTS.md
 
+> ⚠️ **EARLY DEVELOPMENT NOTICE**  
+> This repository is in early development (pre-release/alpha).  
+> The current release is a “hello world” scaffold. APIs and behavior will change rapidly as features are added over the coming weeks.  
+>  
+> **Metadata requirement:**  
+> All pre-release/alpha versions must include in their `pyproject.toml`/`setup.py` description:  
+> _“This is a pre-release/alpha version for initial feedback and CI testing. Not for production use.”_
+
 ## **Task Discovery & Execution Policy for Agents**
 
 This document defines conventions and operational policies for automation agents (e.g., Codex, maintenance bots) discovering and running repo tasks.  
