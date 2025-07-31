@@ -1,5 +1,8 @@
 # obk
 
+> ⚠️ This project is in early development (pre-release/alpha).
+> The current release is a “hello world” scaffold. APIs and behavior will change rapidly as features are added over the coming weeks.
+
 Minimal CLI demonstrating dependency injection and error-handled commands.
 
 ## Installation
@@ -29,6 +32,10 @@ For help on available commands:
 ```bash
 obk --help
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
