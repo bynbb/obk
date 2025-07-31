@@ -5,7 +5,7 @@ Minimal CLI demonstrating dependency injection and error-handled commands.
 ## Installation
 
 ```bash
-pip install obk-cli
+pip install obk
 ```
 
 ## Quickstart

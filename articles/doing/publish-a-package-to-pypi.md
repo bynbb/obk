@@ -31,7 +31,7 @@ requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "obk-cli"
+name = "obk"
 version = "0.1.0"
 description = "A scalable hello-world CLI starter. This is a pre-release/alpha version for initial feedback and CI testing. Not for production use."
 readme = "README.md"
@@ -94,11 +94,11 @@ Enter your PyPI credentials when prompted.
 
 ## **6. Verify Your Package**
 
-* Visit `https://pypi.org/project/obk-cli/`.
+* Visit `https://pypi.org/project/obk/`.
 * Try installing it:
 
 ```bash
-pip install obk-cli
+pip install obk
 ```
 
 * * *
@@ -128,7 +128,7 @@ python -m twine upload --repository testpypi dist/*
 Install from TestPyPI:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ obk-cli
+pip install --index-url https://test.pypi.org/simple/obk
 ```
 
 * * *
