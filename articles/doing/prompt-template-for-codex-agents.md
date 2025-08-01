@@ -9,16 +9,18 @@ This template uses GSL elements for reportability.
 
 ```xml
 
-<!--
-Standardized GSL prompt and spec for OBK/Codex agent work.
-- Fill in all sections as needed.
-- Rules for agent/maintainer updates are in the Document Specification section.
-- Agents may only update workflows and add new tests (see rules).
-- Everything else is for maintainers.
--->
-
 <?xml version="1.0" encoding="UTF-8"?>
 <gsl-prompt id="<!-- PROMPT_ID_HERE -->">
+<gsl-description>
+<!--
+This is a self-contained prompt and spec for OBK/Codex agent work.
+- Inputs, outputs, workflows, and tests are listed below.
+- All document rules and agent policies are defined in the "Document Specification" section.
+- Agents may only update workflows and add new tests (see rules).
+- Everything else is for maintainers to edit as needed.
+- This file should be easy to read and quick to update—no hidden steps or dependencies.
+-->
+</gsl-description>
 
 <gsl-header>
     
@@ -73,14 +75,18 @@ Note: This GSL document uses XML-like section tags as containers, but the conten
 </gsl-workflows>
 
 <gsl-tdd>
+
+<gsl-description>
     
 ## 5. Tests
 
 <!--
 Add single-line manual tests here.
-Each <gsl-test> element should fully validate a required feature or edge case.
+Each `<gsl-test>` element should fully validate a required feature or edge case.
 You may add a code block (with triple backticks) under each test if needed.
 -->
+
+</gsl-description>    
 
 <gsl-test id="T1">
     
@@ -88,9 +94,13 @@ You may add a code block (with triple backticks) under each test if needed.
 <!--
 ```python
 # Optional code example for T1
-\--> </gsl-test>
+\--> 
+</gsl-test>
 
-<!-- Add more <gsl-test> elements as needed. -->
+<gsl-test id="T2">
+
+<!-- Add more `<gsl-test>` elements as needed. -->
+</gsl-test>
 
 </gsl-tdd>
 
