@@ -1,12 +1,9 @@
-"""Command-line interface for obk using classes."""
-
 from __future__ import annotations
 
-from __future__ import annotations
-
-import logging
 import sys
+import logging
 from pathlib import Path
+from datetime import datetime
 
 import typer
 
@@ -17,19 +14,32 @@ from .validation import validate_all
 from .preprocess import preprocess_text, postprocess_text
 from .harmonize import harmonize_text
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+LOG_FILE = REPO_ROOT / "obk.log"
 
-LOG_FILE = Path("obk.log")
 
+def get_default_prompts_dir():
+    today = datetime.now()
+    return REPO_ROOT / "prompts" / f"{today.year:04}" / f"{today.month:02}" / f"{today.day:02}"
+
+def find_prompts_root() -> Path:
+    """Search upwards from CWD for the 'prompts' directory."""
+    cwd = Path.cwd()
+    for parent in [cwd] + list(cwd.parents):
+        candidate = parent / "prompts"
+        if candidate.is_dir():
+            return candidate
+    raise FileNotFoundError(
+        "Could not find 'prompts' directory. Please run this command from within your project tree."
+    )
 
 def configure_logging(log_file: Path) -> None:
     """Configure root logging to write to ``log_file``."""
-
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
         handlers=[logging.FileHandler(log_file, encoding="utf-8")],
     )
-
 
 def _global_excepthook(
     exc_type: type[BaseException], exc_value: BaseException, exc_tb
@@ -46,9 +56,7 @@ def _global_excepthook(
     )
     sys.exit(1)
 
-
 sys.excepthook = _global_excepthook
-
 
 class ObkCLI:
     """Typer-based CLI with dependency injection."""
@@ -86,10 +94,20 @@ class ObkCLI:
             short_help="Greet by name",
         )(self._cmd_greet)
         self.app.command(
+            name="validate-today",
+            help="Validate today's prompt files only",
+            short_help="Validate today's prompts",
+        )(self._cmd_validate_today)
+        self.app.command(
             name="validate-all",
-            help="Validate all prompt files",
-            short_help="Validate prompts",
+            help="Validate all prompt files under prompts/",
+            short_help="Validate all prompts",
         )(self._cmd_validate_all)
+        self.app.command(
+            name="harmonize-today",
+            help="Harmonize today's prompt files only",
+            short_help="Harmonize today's prompts",
+        )(self._cmd_harmonize_today)
         self.app.command(
             name="harmonize-all",
             help="Harmonize all prompt files",
@@ -101,14 +119,12 @@ class ObkCLI:
             short_help="Generate trace ID",
         )(self._cmd_trace_id)
 
-    # callback ---------------------------------------------------------------
     def _callback(
         self, logfile: Path = typer.Option(LOG_FILE, help="Path to the log file")
     ) -> None:
         self.container.config.log_file.from_value(logfile)
         configure_logging(self.container.config.log_file())
 
-    # command implementations -------------------------------------------------
     def _cmd_hello_world(self) -> None:
         greeter = self.container.greeter()
         typer.echo(greeter.hello())
@@ -126,23 +142,46 @@ class ObkCLI:
         greeter = self.container.greeter()
         typer.echo(greeter.greet(name, excited))
 
-    def _cmd_validate_all(
+    def _cmd_validate_today(
         self,
-        prompts_dir: Path = Path("prompts"),
         schema_path: Path = Path(__file__).resolve().parent / "xsd" / "prompt.xsd",
     ) -> None:
-        errors = validate_all(prompts_dir, schema_path)
+        prompts_dir = get_default_prompts_dir()
+        typer.echo(f"Validating today's prompts under: {prompts_dir.resolve()}")
+        errors, passed, failed = validate_all(prompts_dir, schema_path)
         if errors:
+            typer.echo(f"❌ Validation errors found in {failed} file(s):")
             for err in errors:
-                typer.echo(err, err=True)
+                typer.echo(f"  - {err}", err=True)
+        else:
+            typer.echo(f"✅ All {passed} prompt files for today validated successfully!")
+        typer.echo(f"\nSummary: {passed} passed, {failed} failed.\n")
+        if failed > 0:
             raise typer.Exit(code=1)
-        typer.echo("All prompt files are valid.")
 
-    def _cmd_harmonize_all(
+    def _cmd_validate_all(
         self,
-        prompts_dir: Path = Path("prompts"),
+        schema_path: Path = Path(__file__).resolve().parent / "xsd" / "prompt.xsd",
+    ) -> None:
+        prompts_dir = find_prompts_root()
+        typer.echo(f"Validating ALL prompts under: {prompts_dir.resolve()}")
+        errors, passed, failed = validate_all(prompts_dir, schema_path)
+        if errors:
+            typer.echo(f"❌ Validation errors found in {failed} file(s):")
+            for err in errors:
+                typer.echo(f"  - {err}", err=True)
+        else:
+            typer.echo(f"✅ All {passed} prompt files validated successfully!")
+        typer.echo(f"\nSummary: {passed} passed, {failed} failed.\n")
+        if failed > 0:
+            raise typer.Exit(code=1)
+
+    def _cmd_harmonize_today(
+        self,
         dry_run: bool = typer.Option(False, help="Show changes without saving"),
     ) -> None:
+        prompts_dir = get_default_prompts_dir()
+        typer.echo(f"Harmonizing TODAY's prompts under: {prompts_dir.resolve()}")
         for file_path in prompts_dir.rglob("*.md"):
             original = file_path.read_text(encoding="utf-8")
             processed, placeholders = preprocess_text(original)
@@ -153,10 +192,40 @@ class ObkCLI:
             for act in actions:
                 typer.echo(f"✔️ {act} in {file_path.name}")
 
+    def _cmd_harmonize_all(
+        self,
+        dry_run: bool = typer.Option(False, help="Show changes without saving"),
+    ) -> None:
+        try:
+            prompts_dir = find_prompts_root()
+        except FileNotFoundError as e:
+            typer.echo(f"❌ {e}", err=True)
+            raise typer.Exit(code=2)
+
+        typer.echo(f"Harmonizing ALL prompts under: {prompts_dir.resolve()}")
+        total_files = 0
+        changed_files = 0
+        for file_path in prompts_dir.rglob("*.md"):
+            total_files += 1
+            original = file_path.read_text(encoding="utf-8")
+            processed, placeholders = preprocess_text(original)
+            harmonized, actions = harmonize_text(processed)
+            final = postprocess_text(harmonized, placeholders)
+            if not dry_run and final != original:
+                file_path.write_text(final, encoding="utf-8")
+                changed_files += 1
+            if actions:
+                for act in actions:
+                    typer.echo(f"✔️ {act} in {file_path.name}")
+
+        typer.echo(f"\nSummary: {changed_files} file(s) harmonized out of {total_files} checked.\n")
+        if dry_run:
+            typer.echo("Dry run: No files were modified.\n")
+
+
     def _cmd_trace_id(self, timezone: str = "UTC") -> None:
         typer.echo(generate_trace_id(timezone))
 
-    # runner ---------------------------------------------------------------
     def run(self, argv: list[str] | None = None) -> None:
         argv = argv or sys.argv[1:]
         try:
@@ -168,7 +237,6 @@ class ObkCLI:
             logging.getLogger(__name__).exception("Division error")
             typer.echo(f"[ERROR] {exc}", err=True)
             sys.exit(2)
-
 
 def main(argv: list[str] | None = None) -> None:
     """Entry point for ``python -m obk``."""
