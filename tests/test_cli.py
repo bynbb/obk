@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -198,3 +199,113 @@ def test_container_override_greeter_greet(tmp_path, capsys):
     cli.run(["greet", "Ada", "--excited"])
     captured = capsys.readouterr()
     assert captured.out.strip() == "[mock greet] Ada !!!"
+
+
+def _write_prompt(file: Path, content: str) -> None:
+    file.parent.mkdir(parents=True, exist_ok=True)
+    file.write_text(content, encoding="utf-8")
+
+
+def test_trace_id(tmp_path):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    result = subprocess.run(
+        [sys.executable, "-m", "obk", "trace-id"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    assert re.match(r"\d{8}T\d{6}[+-]\d{4}", result.stdout.strip())
+
+
+def test_validate_all_success(tmp_path):
+    prompt = tmp_path / "prompts" / "valid.md"
+    _write_prompt(
+        prompt,
+        """<?xml version='1.0' encoding='UTF-8'?>\n<gsl-prompt id='20250731T000000+0000'>\n<gsl-header>h</gsl-header>\n<gsl-block>\n<gsl-purpose>p</gsl-purpose>\n<gsl-inputs>i</gsl-inputs>\n<gsl-outputs>o</gsl-outputs>\n<gsl-workflows/>\n<gsl-tdd><gsl-test id='T1'>t</gsl-test></gsl-tdd>\n<gsl-document-spec>d</gsl-document-spec>\n</gsl-block>\n</gsl-prompt>\n""",
+    )
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "obk",
+            "validate-all",
+            "--prompts-dir",
+            str(tmp_path / "prompts"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+        check=True,
+    )
+    assert "All prompt files are valid" in result.stdout
+
+
+def test_validate_all_failure(tmp_path):
+    bad = tmp_path / "prompts" / "bad.md"
+    _write_prompt(bad, "<broken>")
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "obk",
+            "validate-all",
+            "--prompts-dir",
+            str(tmp_path / "prompts"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    assert result.returncode == 1
+    assert "error" in result.stderr.lower() or result.stderr
+
+
+def test_harmonize_all(tmp_path):
+    prompt = tmp_path / "prompts" / "harm.md"
+    _write_prompt(
+        prompt,
+        """<gsl-prompt id='20250731T000000+0000'>\n    <gsl-header>h</gsl-header>\n<gsl-block>\n    <gsl-purpose>p</gsl-purpose>\n</gsl-block>\n</gsl-prompt>\n""",
+    )
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "obk",
+            "harmonize-all",
+            "--prompts-dir",
+            str(tmp_path / "prompts"),
+        ],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+        check=True,
+    )
+    txt = prompt.read_text()
+    assert txt.splitlines()[1].startswith("<gsl-header>")
+
+
+def test_commands_any_directory(tmp_path):
+    (tmp_path / "prompts").mkdir()
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    subprocess.run(
+        [sys.executable, "-m", "obk", "trace-id"],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+        check=True,
+    )
+    assert (tmp_path / "prompts").exists()
