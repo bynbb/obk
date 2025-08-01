@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import obk.cli as cli
 
 PYTHON = sys.executable
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -54,23 +55,24 @@ def test_validate_all(tmp_path):
 def test_harmonize_all_and_dry_run(tmp_path):
     prompts = tmp_path / "prompts"
     prompt = prompts / "harm.md"
-    _write_prompt(
-        prompt,
-        "<gsl-prompt id='20250731T000000+0000'>\n    <gsl-header>h</gsl-header>\n<gsl-block>\n    <gsl-purpose>p</gsl-purpose>\n</gsl-block>\n</gsl-prompt>\n",
+    content = (
+        "<gsl-prompt id='20250731T000000+0000'>\n    <gsl-header>h</gsl-header>\n"
+        "<gsl-block>\n    <gsl-purpose>p</gsl-purpose>\n</gsl-block>\n</gsl-prompt>\n"
     )
+    _write_prompt(prompt, content)
 
     result = _run(["harmonize-all", "--prompts-dir", str(prompts)], cwd=tmp_path)
     assert result.returncode == 0
     txt = prompt.read_text()
     assert txt.splitlines()[1].startswith("<gsl-header>")
 
-    original = txt
+    _write_prompt(prompt, content)  # reset to original
     result = _run(
         ["harmonize-all", "--prompts-dir", str(prompts), "--dry-run"], cwd=tmp_path
     )
     assert result.returncode == 0
     assert "Would" in result.stdout
-    assert original == prompt.read_text()
+    assert content == prompt.read_text()
 
 
 # T3
@@ -104,7 +106,6 @@ def test_trace_id_timezones(tmp_path):
 
 
 # Helpers for T5/T6
-import obk.cli as cli
 
 
 def _patch_repo_root(tmp_path, monkeypatch):
@@ -145,10 +146,11 @@ def test_harmonize_today(monkeypatch, capsys, tmp_path):
     prompts_dir = _patch_repo_root(tmp_path, monkeypatch)
     prompts_dir.mkdir(parents=True)
     file = prompts_dir / "harm.md"
-    _write_prompt(
-        file,
-        "<gsl-prompt id='20250731T000000+0000'>\n    <gsl-header>h</gsl-header>\n<gsl-block>\n    <gsl-purpose>p</gsl-purpose>\n</gsl-block>\n</gsl-prompt>\n",
+    content = (
+        "<gsl-prompt id='20250731T000000+0000'>\n    <gsl-header>h</gsl-header>\n"
+        "<gsl-block>\n    <gsl-purpose>p</gsl-purpose>\n</gsl-block>\n</gsl-prompt>\n"
     )
+    _write_prompt(file, content)
 
     cli_obj = cli.ObkCLI()
     with pytest.raises(SystemExit) as exc:
@@ -158,8 +160,7 @@ def test_harmonize_today(monkeypatch, capsys, tmp_path):
     assert "1 file" in captured.out
     assert "Summary" in captured.out
 
-    txt = file.read_text()
-    _write_prompt(file, txt)  # reset
+    _write_prompt(file, content)  # reset to original
     with pytest.raises(SystemExit) as exc:
         cli_obj.run(["harmonize-today", "--dry-run"])
     captured = capsys.readouterr()
