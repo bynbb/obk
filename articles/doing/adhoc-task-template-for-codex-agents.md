@@ -45,6 +45,8 @@ Sequentially implement and test features in `<repo_name>` by reproducing behavio
 
 **Prohibited:**  
 - Any file not listed above (e.g., arbitrary `.txt`, binary files, non-Python source, OS/user files)
+- **Do not run, modify, or reference any `AGENTS.md` file. `AGENTS.md` files must be ignored by agents and are out of scope for all automated and manual tasks.**
+
 
 **Exception:**  
 - The agent may **append** to `<prompt_id>.md` (no edits or deletions), for traceability only.
