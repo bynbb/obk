@@ -21,7 +21,14 @@ LOG_FILE = Path("obk.log")
 
 def get_default_prompts_dir():
     today = datetime.now()
-    return REPO_ROOT / "prompts" / f"{today.year:04}" / f"{today.month:02}" / f"{today.day:02}"
+    return (
+        REPO_ROOT
+        / "prompts"
+        / f"{today.year:04}"
+        / f"{today.month:02}"
+        / f"{today.day:02}"
+    )
+
 
 def find_prompts_root() -> Path:
     """Search upwards from CWD for the 'prompts' directory."""
@@ -34,6 +41,7 @@ def find_prompts_root() -> Path:
         "Could not find 'prompts' directory. Please run this command from within your project tree."
     )
 
+
 def configure_logging(log_file: Path) -> None:
     """Configure root logging to write to ``log_file``."""
     logging.basicConfig(
@@ -41,6 +49,7 @@ def configure_logging(log_file: Path) -> None:
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
         handlers=[logging.FileHandler(log_file, encoding="utf-8")],
     )
+
 
 def _global_excepthook(
     exc_type: type[BaseException], exc_value: BaseException, exc_tb
@@ -57,7 +66,9 @@ def _global_excepthook(
     )
     sys.exit(1)
 
+
 sys.excepthook = _global_excepthook
+
 
 class ObkCLI:
     """Typer-based CLI with dependency injection."""
@@ -154,11 +165,16 @@ class ObkCLI:
             typer.echo(f"❌ Validation errors found in {failed} file(s):")
             for err in errors:
                 typer.echo(f"  - {err}", err=True)
+        elif passed == 0:
+            typer.echo("No prompt files found.")
         else:
-            typer.echo(f"✅ All {passed} prompt files for today validated successfully!")
+            typer.echo(
+                f"✅ All {passed} prompt files for today validated successfully!"
+            )
         typer.echo(f"\nSummary: {passed} passed, {failed} failed.\n")
         if failed > 0:
             raise typer.Exit(code=1)
+        raise typer.Exit(code=0)
 
     def _cmd_validate_all(
         self,
@@ -172,7 +188,11 @@ class ObkCLI:
         ),
     ) -> None:
         if prompts_dir is None:
-            prompts_dir = find_prompts_root()
+            try:
+                prompts_dir = find_prompts_root()
+            except FileNotFoundError as e:
+                typer.echo(f"❌ {e}", err=True)
+                raise typer.Exit(code=2)
         else:
             prompts_dir = Path(prompts_dir)
         typer.echo(f"Validating ALL prompts under: {prompts_dir.resolve()}")
@@ -181,11 +201,14 @@ class ObkCLI:
             typer.echo(f"❌ Validation errors found in {failed} file(s):")
             for err in errors:
                 typer.echo(f"  - {err}", err=True)
+        elif passed == 0:
+            typer.echo("No prompt files found.")
         else:
             typer.echo("All prompt files are valid")
         typer.echo(f"\nSummary: {passed} passed, {failed} failed.\n")
         if failed > 0:
             raise typer.Exit(code=1)
+        raise typer.Exit(code=0)
 
     def _cmd_harmonize_today(
         self,
@@ -193,15 +216,32 @@ class ObkCLI:
     ) -> None:
         prompts_dir = get_default_prompts_dir()
         typer.echo(f"Harmonizing TODAY's prompts under: {prompts_dir.resolve()}")
+        total_files = 0
+        changed_files = 0
         for file_path in prompts_dir.rglob("*.md"):
+            total_files += 1
             original = file_path.read_text(encoding="utf-8")
             processed, placeholders = preprocess_text(original)
             harmonized, actions = harmonize_text(processed)
             final = postprocess_text(harmonized, placeholders)
-            if not dry_run:
+            if final != original:
+                changed_files += 1
+            if not dry_run and final != original:
                 file_path.write_text(final, encoding="utf-8")
-            for act in actions:
-                typer.echo(f"✔️ {act} in {file_path.name}")
+            if actions:
+                for act in actions:
+                    prefix = "Would " if dry_run else ""
+                    typer.echo(f"✔️ {prefix}{act} in {file_path.name}")
+
+        if total_files == 0:
+            typer.echo("No prompt files found.")
+        typer.echo(
+            f"\nSummary: {changed_files if not dry_run else 0} file(s)"
+            f"{' would be' if dry_run else ''} harmonized out of {total_files} checked.\n"
+        )
+        if dry_run:
+            typer.echo("Dry run: No files were modified.\n")
+        raise typer.Exit(code=0)
 
     def _cmd_harmonize_all(
         self,
@@ -228,17 +268,24 @@ class ObkCLI:
             processed, placeholders = preprocess_text(original)
             harmonized, actions = harmonize_text(processed)
             final = postprocess_text(harmonized, placeholders)
+            if final != original:
+                changed_files += 1
             if not dry_run and final != original:
                 file_path.write_text(final, encoding="utf-8")
-                changed_files += 1
             if actions:
                 for act in actions:
-                    typer.echo(f"✔️ {act} in {file_path.name}")
+                    prefix = "Would " if dry_run else ""
+                    typer.echo(f"✔️ {prefix}{act} in {file_path.name}")
 
-        typer.echo(f"\nSummary: {changed_files} file(s) harmonized out of {total_files} checked.\n")
+        if total_files == 0:
+            typer.echo("No prompt files found.")
+        typer.echo(
+            f"\nSummary: {changed_files if not dry_run else 0} file(s)"
+            f"{' would be' if dry_run else ''} harmonized out of {total_files} checked.\n"
+        )
         if dry_run:
             typer.echo("Dry run: No files were modified.\n")
-
+        raise typer.Exit(code=0)
 
     def _cmd_trace_id(self, timezone: str = "UTC") -> None:
         typer.echo(generate_trace_id(timezone))
@@ -254,6 +301,7 @@ class ObkCLI:
             logging.getLogger(__name__).exception("Division error")
             typer.echo(f"[ERROR] {exc}", err=True)
             sys.exit(2)
+
 
 def main(argv: list[str] | None = None) -> None:
     """Entry point for ``python -m obk``."""
