@@ -12,6 +12,10 @@ import typer
 
 from .containers import Container
 from .services import DivisionByZeroError, FatalError
+from .trace_id import generate_trace_id
+from .validation import validate_all
+from .preprocess import preprocess_text, postprocess_text
+from .harmonize import harmonize_text
 
 
 LOG_FILE = Path("obk.log")
@@ -81,6 +85,21 @@ class ObkCLI:
             help="Greet by name with optional excitement",
             short_help="Greet by name",
         )(self._cmd_greet)
+        self.app.command(
+            name="validate-all",
+            help="Validate all prompt files",
+            short_help="Validate prompts",
+        )(self._cmd_validate_all)
+        self.app.command(
+            name="harmonize-all",
+            help="Harmonize all prompt files",
+            short_help="Harmonize prompts",
+        )(self._cmd_harmonize_all)
+        self.app.command(
+            name="trace-id",
+            help="Generate a trace ID",
+            short_help="Generate trace ID",
+        )(self._cmd_trace_id)
 
     # callback ---------------------------------------------------------------
     def _callback(
@@ -107,12 +126,44 @@ class ObkCLI:
         greeter = self.container.greeter()
         typer.echo(greeter.greet(name, excited))
 
+    def _cmd_validate_all(
+        self,
+        prompts_dir: Path = Path("prompts"),
+        schema_path: Path = Path(__file__).resolve().parent / "xsd" / "prompt.xsd",
+    ) -> None:
+        errors = validate_all(prompts_dir, schema_path)
+        if errors:
+            for err in errors:
+                typer.echo(err, err=True)
+            raise typer.Exit(code=1)
+        typer.echo("All prompt files are valid.")
+
+    def _cmd_harmonize_all(
+        self,
+        prompts_dir: Path = Path("prompts"),
+        dry_run: bool = typer.Option(False, help="Show changes without saving"),
+    ) -> None:
+        for file_path in prompts_dir.rglob("*.md"):
+            original = file_path.read_text(encoding="utf-8")
+            processed, placeholders = preprocess_text(original)
+            harmonized, actions = harmonize_text(processed)
+            final = postprocess_text(harmonized, placeholders)
+            if not dry_run:
+                file_path.write_text(final, encoding="utf-8")
+            for act in actions:
+                typer.echo(f"✔️ {act} in {file_path.name}")
+
+    def _cmd_trace_id(self, timezone: str = "UTC") -> None:
+        typer.echo(generate_trace_id(timezone))
+
     # runner ---------------------------------------------------------------
     def run(self, argv: list[str] | None = None) -> None:
         argv = argv or sys.argv[1:]
         try:
             cmd = typer.main.get_command(self.app)
-            cmd.main(args=argv, prog_name="obk", standalone_mode=False)
+            exit_code = cmd.main(args=argv, prog_name="obk", standalone_mode=False)
+            if isinstance(exit_code, int):
+                sys.exit(exit_code)
         except DivisionByZeroError as exc:
             logging.getLogger(__name__).exception("Division error")
             typer.echo(f"[ERROR] {exc}", err=True)
