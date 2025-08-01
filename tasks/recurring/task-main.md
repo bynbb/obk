@@ -1,4 +1,4 @@
-# AGENTS.md
+# Main
 
 > ⚠️ **EARLY DEVELOPMENT NOTICE**  
 > This repository is in early development (pre-release/alpha).  
@@ -118,6 +118,6 @@ It is intended for both global and per-subfolder use.
 
 * * *
 
-**End of AGENTS.md**
+**End of `task-main.md`**
 
 * * *

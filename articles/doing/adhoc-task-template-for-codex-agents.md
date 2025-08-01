@@ -45,6 +45,8 @@ Sequentially implement and test features in `<repo_name>` by reproducing behavio
 
 **Prohibited:**  
 - Any file not listed above (e.g., arbitrary `.txt`, binary files, non-Python source, OS/user files)
+* **Do not run, modify, or reference any file in `tasks/recurring/`. Agents must ignore all recurring tasks—only the current ad-hoc task is in scope for automated or manual work.**
+
 
 **Exception:**  
 - The agent may **append** to `<prompt_id>.md` (no edits or deletions), for traceability only.

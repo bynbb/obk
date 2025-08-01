@@ -155,13 +155,10 @@ class ObkCLI:
         greeter = self.container.greeter()
         typer.echo(greeter.greet(name, excited))
 
-    def _cmd_validate_today(
-        self,
-        schema_path: Path = Path(__file__).resolve().parent / "xsd" / "prompt.xsd",
-    ) -> None:
+    def _cmd_validate_today(self) -> None:
         prompts_dir = get_default_prompts_dir()
         typer.echo(f"Validating today's prompts under: {prompts_dir.resolve()}")
-        errors, passed, failed = validate_all(prompts_dir, schema_path)
+        errors, passed, failed = validate_all(prompts_dir)
         if errors:
             typer.echo(f"[ERROR] Validation errors found in {failed} file(s):")
             for err in errors:
@@ -182,11 +179,6 @@ class ObkCLI:
         prompts_dir: Path | None = typer.Option(
             None, help="Path to the prompts directory"
         ),
-        schema_path: Path = typer.Option(
-            Path(__file__).resolve().parent / "xsd" / "prompt.xsd",
-            "--schema",
-            help="Path to the GSL prompt schema",
-        ),
     ) -> None:
         if prompts_dir is None:
             try:
@@ -197,7 +189,7 @@ class ObkCLI:
         else:
             prompts_dir = Path(prompts_dir)
         typer.echo(f"Validating ALL prompts under: {prompts_dir.resolve()}")
-        errors, passed, failed = validate_all(prompts_dir, schema_path)
+        errors, passed, failed = validate_all(prompts_dir)
         if errors:
             typer.echo(f"[ERROR] Validation errors found in {failed} file(s):")
             for err in errors:

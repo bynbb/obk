@@ -193,12 +193,17 @@ def test_autolocate_prompts_from_subdir(tmp_path):
 
 
 # T9
-def test_summary_no_prompts(tmp_path):
-    prompts = tmp_path / "prompts"
-    prompts.mkdir()
-    res = _run(["harmonize-today"], cwd=tmp_path)
-    assert "No prompt files found" in res.stdout
-    assert "Summary" in res.stdout
+def test_summary_no_prompts(monkeypatch, capsys, tmp_path):
+    prompts_dir = _patch_repo_root(tmp_path, monkeypatch)
+    prompts_dir.mkdir(parents=True)
+
+    cli_obj = cli.ObkCLI()
+    with pytest.raises(SystemExit) as exc:
+        cli_obj.run(["harmonize-today"])
+    captured = capsys.readouterr()
+    assert exc.value.code == 0
+    assert "No prompt files found" in captured.out
+    assert "Summary" in captured.out
 
 
 # T10
