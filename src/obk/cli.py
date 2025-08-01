@@ -15,7 +15,8 @@ from .preprocess import preprocess_text, postprocess_text
 from .harmonize import harmonize_text
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-LOG_FILE = REPO_ROOT / "obk.log"
+# Default log file path is relative to the current working directory
+LOG_FILE = Path("obk.log")
 
 
 def get_default_prompts_dir():
@@ -161,9 +162,19 @@ class ObkCLI:
 
     def _cmd_validate_all(
         self,
-        schema_path: Path = Path(__file__).resolve().parent / "xsd" / "prompt.xsd",
+        prompts_dir: Path | None = typer.Option(
+            None, help="Path to the prompts directory"
+        ),
+        schema_path: Path = typer.Option(
+            Path(__file__).resolve().parent / "xsd" / "prompt.xsd",
+            "--schema",
+            help="Path to the GSL prompt schema",
+        ),
     ) -> None:
-        prompts_dir = find_prompts_root()
+        if prompts_dir is None:
+            prompts_dir = find_prompts_root()
+        else:
+            prompts_dir = Path(prompts_dir)
         typer.echo(f"Validating ALL prompts under: {prompts_dir.resolve()}")
         errors, passed, failed = validate_all(prompts_dir, schema_path)
         if errors:
@@ -171,7 +182,7 @@ class ObkCLI:
             for err in errors:
                 typer.echo(f"  - {err}", err=True)
         else:
-            typer.echo(f"✅ All {passed} prompt files validated successfully!")
+            typer.echo("All prompt files are valid")
         typer.echo(f"\nSummary: {passed} passed, {failed} failed.\n")
         if failed > 0:
             raise typer.Exit(code=1)
@@ -194,13 +205,19 @@ class ObkCLI:
 
     def _cmd_harmonize_all(
         self,
+        prompts_dir: Path | None = typer.Option(
+            None, help="Path to the prompts directory"
+        ),
         dry_run: bool = typer.Option(False, help="Show changes without saving"),
     ) -> None:
-        try:
-            prompts_dir = find_prompts_root()
-        except FileNotFoundError as e:
-            typer.echo(f"❌ {e}", err=True)
-            raise typer.Exit(code=2)
+        if prompts_dir is None:
+            try:
+                prompts_dir = find_prompts_root()
+            except FileNotFoundError as e:
+                typer.echo(f"❌ {e}", err=True)
+                raise typer.Exit(code=2)
+        else:
+            prompts_dir = Path(prompts_dir)
 
         typer.echo(f"Harmonizing ALL prompts under: {prompts_dir.resolve()}")
         total_files = 0
