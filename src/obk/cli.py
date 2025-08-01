@@ -62,7 +62,8 @@ def _global_excepthook(
         "Uncaught exception", exc_info=(exc_type, exc_value, exc_tb)
     )
     print(
-        "[FATAL] Unexpected error occurred. See the log for details.", file=sys.stderr
+        f"[FATAL] {exc_type.__name__}: {exc_value}\nSee the log for details.",
+        file=sys.stderr,
     )
     sys.exit(1)
 
