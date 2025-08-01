@@ -163,14 +163,14 @@ class ObkCLI:
         typer.echo(f"Validating today's prompts under: {prompts_dir.resolve()}")
         errors, passed, failed = validate_all(prompts_dir, schema_path)
         if errors:
-            typer.echo(f"❌ Validation errors found in {failed} file(s):")
+            typer.echo(f"[ERROR] Validation errors found in {failed} file(s):")
             for err in errors:
                 typer.echo(f"  - {err}", err=True)
         elif passed == 0:
             typer.echo("No prompt files found.")
         else:
             typer.echo(
-                f"✅ All {passed} prompt files for today validated successfully!"
+                f"[OK] All {passed} prompt files for today validated successfully!"
             )
         typer.echo(f"\nSummary: {passed} passed, {failed} failed.\n")
         if failed > 0:
@@ -192,14 +192,14 @@ class ObkCLI:
             try:
                 prompts_dir = find_prompts_root()
             except FileNotFoundError as e:
-                typer.echo(f"❌ {e}", err=True)
+                typer.echo(f"[ERROR] {e}", err=True)
                 raise typer.Exit(code=2)
         else:
             prompts_dir = Path(prompts_dir)
         typer.echo(f"Validating ALL prompts under: {prompts_dir.resolve()}")
         errors, passed, failed = validate_all(prompts_dir, schema_path)
         if errors:
-            typer.echo(f"❌ Validation errors found in {failed} file(s):")
+            typer.echo(f"[ERROR] Validation errors found in {failed} file(s):")
             for err in errors:
                 typer.echo(f"  - {err}", err=True)
         elif passed == 0:
@@ -232,7 +232,7 @@ class ObkCLI:
             if actions:
                 for act in actions:
                     prefix = "Would " if dry_run else ""
-                    typer.echo(f"✔️ {prefix}{act} in {file_path.name}")
+                    typer.echo(f"[OK] {prefix}{act} in {file_path.name}")
 
         if total_files == 0:
             typer.echo("No prompt files found.")
@@ -255,7 +255,7 @@ class ObkCLI:
             try:
                 prompts_dir = find_prompts_root()
             except FileNotFoundError as e:
-                typer.echo(f"❌ {e}", err=True)
+                typer.echo(f"[ERROR] {e}", err=True)
                 raise typer.Exit(code=2)
         else:
             prompts_dir = Path(prompts_dir)
@@ -276,7 +276,7 @@ class ObkCLI:
             if actions:
                 for act in actions:
                     prefix = "Would " if dry_run else ""
-                    typer.echo(f"✔️ {prefix}{act} in {file_path.name}")
+                    typer.echo(f"[OK] {prefix}{act} in {file_path.name}")
 
         if total_files == 0:
             typer.echo("No prompt files found.")
