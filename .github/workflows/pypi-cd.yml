@@ -1,0 +1,37 @@
+name: PyPI Deploy
+
+on:
+  push:
+    branches: [deploy]
+
+jobs:
+  build-and-publish:
+    runs-on: [self-hosted, deploy-runner]  # Use dedicated CD runner
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clean workspace
+        run: git clean -fdx
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade build twine
+
+      - name: Bump patch version
+        run: |
+          python .github/scripts/bump_patch.py
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
