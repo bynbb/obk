@@ -4,6 +4,7 @@ import sys
 import logging
 from pathlib import Path
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import typer
 
@@ -19,14 +20,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 LOG_FILE = Path("obk.log")
 
 
-def get_default_prompts_dir():
-    today = datetime.now()
+def get_default_prompts_dir(timezone: str = "UTC"):
+    now = datetime.now(ZoneInfo("UTC")).astimezone(ZoneInfo(timezone))
     return (
         REPO_ROOT
         / "prompts"
-        / f"{today.year:04}"
-        / f"{today.month:02}"
-        / f"{today.day:02}"
+        / f"{now.year:04}"
+        / f"{now.month:02}"
+        / f"{now.day:02}"
     )
 
 
@@ -155,9 +156,16 @@ class ObkCLI:
         greeter = self.container.greeter()
         typer.echo(greeter.greet(name, excited))
 
-    def _cmd_validate_today(self) -> None:
-        prompts_dir = get_default_prompts_dir()
-        typer.echo(f"Validating today's prompts under: {prompts_dir.resolve()}")
+    def _cmd_validate_today(
+        self,
+        timezone: str = typer.Option(
+            "UTC", "--timezone", "-tz", help="Timezone for 'today' prompt folder (default: UTC)"
+        ),
+    ) -> None:
+        prompts_dir = get_default_prompts_dir(timezone)
+        typer.echo(
+            f"Validating today's prompts under: {prompts_dir.resolve()} (timezone: {timezone})"
+        )
         errors, passed, failed = validate_all(prompts_dir)
         if errors:
             typer.echo(f"[ERROR] Validation errors found in {failed} file(s):")
@@ -206,9 +214,14 @@ class ObkCLI:
     def _cmd_harmonize_today(
         self,
         dry_run: bool = typer.Option(False, help="Show changes without saving"),
+        timezone: str = typer.Option(
+            "UTC", "--timezone", "-tz", help="Timezone for 'today' prompt folder (default: UTC)"
+        ),
     ) -> None:
-        prompts_dir = get_default_prompts_dir()
-        typer.echo(f"Harmonizing TODAY's prompts under: {prompts_dir.resolve()}")
+        prompts_dir = get_default_prompts_dir(timezone)
+        typer.echo(
+            f"Harmonizing TODAY's prompts under: {prompts_dir.resolve()} (timezone: {timezone})"
+        )
         total_files = 0
         changed_files = 0
         for file_path in prompts_dir.rglob("*.md"):
@@ -280,7 +293,12 @@ class ObkCLI:
             typer.echo("Dry run: No files were modified.\n")
         raise typer.Exit(code=0)
 
-    def _cmd_trace_id(self, timezone: str = "UTC") -> None:
+    def _cmd_trace_id(
+        self,
+        timezone: str = typer.Option(
+            "UTC", "--timezone", "-tz", help="Timezone for trace ID generation (default: UTC)"
+        ),
+    ) -> None:
         typer.echo(generate_trace_id(timezone))
 
     def run(self, argv: list[str] | None = None) -> None:
