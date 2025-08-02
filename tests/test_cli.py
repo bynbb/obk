@@ -312,9 +312,11 @@ def test_commands_any_directory(tmp_path):
 
 
 def _extract_ymd(text: str) -> str:
+    text = text.replace("\\", "/")
     match = re.search(r"prompts/(\d{4})/(\d{2})/(\d{2})", text)
     assert match
     return "".join(match.groups())
+
 
 
 def test_today_commands_default_timezone(tmp_path):
