@@ -2,7 +2,7 @@
 
 > **Purpose:**
 > A minimal, reliable, self-hosted deployment pipeline for PyPI, designed for the OBK project.
-> This guide assumes you are using self-hosted runners and want the simplest, most auditable release path possible.
+> This guide assumes you are using self-hosted runners and want the simplest, most auditable release path possible. Use this guide to get a working deployment. After that make small changes under the premise "do not break the deployment".
 
 ---
 
