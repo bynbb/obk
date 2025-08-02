@@ -16,6 +16,7 @@ pip install obk
 ```bash
 obk hello-world
 obk divide 4 2
+obk trace-id
 ```
 
 ## Features
@@ -24,6 +25,7 @@ obk divide 4 2
 * `divide` divides two numbers with zero-checking
 * `greet` greets by name with optional excitement
 * `fail` triggers a fatal error for testing
+* `validate-*`, `harmonize-*`, and `trace-id` handle prompt management tasks
 
 ## Usage
 

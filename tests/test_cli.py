@@ -309,3 +309,76 @@ def test_commands_any_directory(tmp_path):
         check=True,
     )
     assert (tmp_path / "prompts").exists()
+
+
+def _extract_ymd(text: str) -> str:
+    text = text.replace("\\", "/")
+    match = re.search(r"prompts/(\d{4})/(\d{2})/(\d{2})", text)
+    assert match
+    return "".join(match.groups())
+
+
+
+def test_today_commands_default_timezone(tmp_path):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    trace = subprocess.run(
+        [sys.executable, "-m", "obk", "trace-id"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    validate = subprocess.run(
+        [sys.executable, "-m", "obk", "validate-today"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    harmonize = subprocess.run(
+        [sys.executable, "-m", "obk", "harmonize-today"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    date = trace.stdout.strip()[:8]
+    assert date == _extract_ymd(validate.stdout)
+    assert date == _extract_ymd(harmonize.stdout)
+
+
+def test_today_commands_timezone_override(tmp_path):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    tz = "America/New_York"
+    trace = subprocess.run(
+        [sys.executable, "-m", "obk", "trace-id", "--timezone", tz],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    validate = subprocess.run(
+        [sys.executable, "-m", "obk", "validate-today", "--timezone", tz],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    harmonize = subprocess.run(
+        [sys.executable, "-m", "obk", "harmonize-today", "--timezone", tz],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=tmp_path,
+        env=env,
+    )
+    date = trace.stdout.strip()[:8]
+    assert date == _extract_ymd(validate.stdout)
+    assert date == _extract_ymd(harmonize.stdout)
