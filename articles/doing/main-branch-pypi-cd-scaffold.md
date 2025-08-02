@@ -81,69 +81,69 @@ print(f"Bumped version to {new_version}")
 * **Enforces Test-before-Deploy**
     
 
-```yaml
-name: CI-CD Pipeline
+    ```yaml
+    name: CI-CD Pipeline
+    
+    on:
+      push:
+        branches: main
+    
+    jobs:
+      test:
+        runs-on: self-hosted
+    
+        steps:
+          - uses: actions/checkout@v4
+    
+          - name: Clean workspace
+            run: git clean -fdx
+    
+          - name: Set up Python
+            uses: actions/setup-python@v5
+            with:
+              python-version: '3.11'
+    
+          - name: Run tests
+            run: |
+              python -m venv .venv
+              .venv/bin/pip install --upgrade pip
+              .venv/bin/pip install -e .[test]
+              .venv/bin/pytest -q
+    
+      build:
+        needs: test
+        if: success()
+        runs-on: self-hosted
+    
+        steps:
+          - uses: actions/checkout@v4
+          - name: Build package
+            run: |
+              python -m venv .venv
+              .venv/bin/pip install build
+              .venv/bin/python -m build
+    
+      deploy:
+        needs: build
+        if: success()
+        runs-on: self-hosted
+    
+        steps:
+          - uses: actions/checkout@v4
+          - name: Set up venv, bump version, and deploy
+            run: |
+              python -m venv .venv
+              .venv/bin/pip install --upgrade pip build twine
+              .venv/bin/python .github/scripts/bump_patch.py
+              .venv/bin/python -m build
+              .venv/bin/twine upload dist/*
+            env:
+              TWINE_USERNAME: __token__
+              TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+    ```
 
-on:
-  push:
-    branches: main
-
-jobs:
-  test:
-    runs-on: self-hosted
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Clean workspace
-        run: git clean -fdx
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Run tests
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install -e .[test]
-          .venv/bin/pytest -q
-
-  build:
-    needs: test
-    if: success()
-    runs-on: self-hosted
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build package
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install build
-          .venv/bin/python -m build
-
-  deploy:
-    needs: build
-    if: success()
-    runs-on: self-hosted
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up venv, bump version, and deploy
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install --upgrade pip build twine
-          .venv/bin/python .github/scripts/bump_patch.py
-          .venv/bin/python -m build
-          .venv/bin/twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-```
-
-> **Note:**  
-> The `needs:` keyword and `if: success()` conditions prevent further steps from executing if a previous job fails.
+    > **Note:**  
+    > The `needs:` keyword and `if: success()` conditions prevent further steps from executing if a previous job fails.
 
 * * *
 
@@ -164,7 +164,94 @@ Perform maintenance steps after each release:
 
 ## 6. Step-by-Step Setup Workflow
 
-* Follow previously documented steps (sections 6.1 through 6.7).
+Follow these steps to configure your OBK pre-release deployment pipeline:
+
+**6.1. Set Up Branching and Protection (see Section 1)**
+
+* Ensure your `main` branch is protected:
+    
+    * Require PRs, approvals, status checks.
+        
+    * Disallow direct pushes and force pushes.
+        
+
+**6.2. Set Up Single Self-Hosted Runner (see Section 2)**
+
+* Register and configure a self-hosted GitHub runner.
+    
+* Label it appropriately (e.g., `self-hosted`).
+    
+
+**6.3. Configure PyPI Credentials**
+
+* Generate PyPI API token ([PyPI token setup](https://pypi.org/help/#apitoken)).
+    
+* Add this as `PYPI_API_TOKEN` in GitHub repo secrets.
+    
+
+**6.4. Add Patch Version Bump Script (see Section 3)**
+
+* Save the provided script (`bump_patch.py`) to `.github/scripts/`.
+    
+* Commit and push.
+    
+
+**6.5. Create Combined CI/CD Workflow (see Section 4)**
+
+* Create `.github/workflows/ci-cd.yml`.
+    
+* Copy the CI/CD YAML provided in Section 4.
+    
+* Ensure jobs (`test`, `build`, `deploy`) are sequenced properly.
+    
+
+**6.6. Create Release-Drafter Workflow**
+
+* Set up Release Drafter in `.github/workflows/release-drafter.yml`.
+    
+* See [release-drafter.yml](.github/workflows/release-drafter.yml) for details.
+    
+* This ensures changelog automation upon GitHub Release publishing.
+    
+
+**6.7. Set Up PR Deployment Checklist (see Section 9.1)**
+
+* Create `.github/pull_request_template.md`.
+    
+* Use the provided PR checklist for explicit deployment control.
+    
+
+**6.8. Test Your Workflow**
+
+* Open a trivial feature branch, then PR into `main`.
+    
+* Use PR checklist to confirm deployment or non-deployment PR.
+    
+* Merge PR and ensure:
+    
+    * Tests run first (and fail properly stops the pipeline).
+        
+    * Version bumps automatically.
+        
+    * Package is published to PyPI (confirm on [PyPI](https://pypi.org/)).
+        
+
+**6.9. Codex Automation Setup (optional, see Section 9.2)**
+
+* After a successful GitHub Release:
+    
+    * Manually run Codex task on a dedicated branch.
+        
+    * Review, merge as a non-deployment commit.
+        
+
+**6.10. Regular Deployment Maintenance (see Section 5)**
+
+* After each deploy, manually sync version in `pyproject.toml`.
+    
+
+
+
     
 
 * * *
