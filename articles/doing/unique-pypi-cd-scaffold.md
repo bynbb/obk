@@ -78,55 +78,46 @@
 
 - #### **Bare Minimum Example:**
 
-  ```yaml
-  name: PyPI Deploy
-
-  on:
-    push:
-      branches: [deploy]
-
-  jobs:
-    build-and-publish:
-      runs-on: [self-hosted, deploy-runner]
-
-      steps:
-        - uses: actions/checkout@v4
-
-        - name: Clean workspace
-          run: git clean -fdx
-
-        - name: Set up Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: '3.11'
-
-        - name: Set up virtual environment and install tools
-          run: |
-            python -m venv .venv
-            source .venv/bin/activate
-            python -m pip install --upgrade pip
-            pip install build twine
-
-        - name: Bump patch version
-          run: |
-            source .venv/bin/activate
-            python .github/scripts/bump_patch.py
-
-        - name: Build package
-          run: |
-            source .venv/bin/activate
-            python -m build
-
-        - name: Publish to PyPI
-          env:
-            TWINE_USERNAME: __token__
-            TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-          run: |
-            source .venv/bin/activate
-            twine upload dist/*
-
-  ```
-  
+    ```yml
+    name: PyPI Deploy
+    
+    on:
+      push:
+        branches: [deploy]
+    
+    jobs:
+      build-and-publish:
+        runs-on: [self-hosted, deploy-runner]
+    
+        steps:
+          - uses: actions/checkout@v4
+    
+          - name: Clean workspace
+            run: git clean -fdx
+    
+          - name: Set up Python
+            uses: actions/setup-python@v5
+            with:
+              python-version: '3.11'
+    
+          - name: Set up virtual environment and install tools
+            run: |
+              python -m venv .venv
+              .venv/bin/pip install --upgrade pip
+              .venv/bin/pip install build twine
+    
+          - name: Bump patch version
+            run: .venv/bin/python .github/scripts/bump_patch.py
+    
+          - name: Build package
+            run: .venv/bin/python -m build
+    
+          - name: Publish to PyPI
+            env:
+              TWINE_USERNAME: __token__
+              TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+            run: .venv/bin/twine upload dist/*
+    ```  
   - _**Reminder:** GitHub Actions doesn’t preserve shell state between steps, so you need to re-`source` the `.venv/bin/activate` in each step that uses Python._
 
 
