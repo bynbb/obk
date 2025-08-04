@@ -27,6 +27,45 @@ obk trace-id
 * `fail` triggers a fatal error for testing
 * `validate-*`, `harmonize-*`, and `trace-id` handle prompt management tasks
 
+## GSL Example
+
+```xml
+<gsl-prompt id="20250803T120000+0000" type="feat">
+<gsl-header>
+
+Example
+</gsl-header>
+<gsl-block>
+<gsl-purpose>
+
+p
+</gsl-purpose>
+<gsl-inputs>
+
+i
+</gsl-inputs>
+<gsl-outputs>
+
+o
+</gsl-outputs>
+<gsl-workflows/>
+<gsl-tdd><gsl-test id="T1">t</gsl-test></gsl-tdd>
+<gsl-document-spec>
+
+d
+</gsl-document-spec>
+<gsl-surgery>
+<gsl-when>
+<gsl-value>
+
+2025-08-02
+</gsl-value>
+</gsl-when>
+</gsl-surgery>
+</gsl-block>
+</gsl-prompt>
+```
+
 ## Usage
 
 For help on available commands:

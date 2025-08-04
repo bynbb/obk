@@ -30,6 +30,7 @@ Sequentially implement and test features in `<repo_name>` by reproducing behavio
 
 - Review `<manual_test_guide>` for manual test best practices (optional).
 - In prompt `<prompt_id>`, write single-line manual tests in `<gsl-tdd>`, each in its own `<gsl-test>` element, covering all required behaviors and edge cases.
+- **While writing manual tests, you may also write matching automated unit tests (e.g., pytest) if feasible, leaving these automated tests in the appropriate test locations for future use.**
 - Iterate on implementation until all tests pass.
 
 ---

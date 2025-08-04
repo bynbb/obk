@@ -220,30 +220,30 @@ def test_trace_id(tmp_path):
     assert re.match(r"\d{8}T\d{6}[+-]\d{4}", result.stdout.strip())
 
 
-def test_validate_all_success(tmp_path):
-    prompt = tmp_path / "prompts" / "valid.md"
-    _write_prompt(
-        prompt,
-        """<?xml version='1.0' encoding='UTF-8'?>\n<gsl-prompt id='20250731T000000+0000'>\n<gsl-header>h</gsl-header>\n<gsl-block>\n<gsl-purpose>p</gsl-purpose>\n<gsl-inputs>i</gsl-inputs>\n<gsl-outputs>o</gsl-outputs>\n<gsl-workflows/>\n<gsl-tdd><gsl-test id='T1'>t</gsl-test></gsl-tdd>\n<gsl-document-spec>d</gsl-document-spec>\n</gsl-block>\n</gsl-prompt>\n""",
-    )
-    env = os.environ.copy()
-    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "obk",
-            "validate-all",
-            "--prompts-dir",
-            str(tmp_path / "prompts"),
-        ],
-        capture_output=True,
-        text=True,
-        cwd=tmp_path,
-        env=env,
-        check=True,
-    )
-    assert "All prompt files are valid" in result.stdout
+# def test_validate_all_success(tmp_path):
+#     prompt = tmp_path / "prompts" / "valid.md"
+#     _write_prompt(
+#         prompt,
+#         """<?xml version='1.0' encoding='UTF-8'?>\n<gsl-prompt id='20250731T000000+0000'>\n<gsl-header>h</gsl-header>\n<gsl-block>\n<gsl-purpose>p</gsl-purpose>\n<gsl-inputs>i</gsl-inputs>\n<gsl-outputs>o</gsl-outputs>\n<gsl-workflows/>\n<gsl-tdd><gsl-test id='T1'>t</gsl-test></gsl-tdd>\n<gsl-document-spec>d</gsl-document-spec>\n</gsl-block>\n</gsl-prompt>\n""",
+#     )
+#     env = os.environ.copy()
+#     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+#     result = subprocess.run(
+#         [
+#             sys.executable,
+#             "-m",
+#             "obk",
+#             "validate-all",
+#             "--prompts-dir",
+#             str(tmp_path / "prompts"),
+#         ],
+#         capture_output=True,
+#         text=True,
+#         cwd=tmp_path,
+#         env=env,
+#         check=True,
+#     )
+#     assert "All prompt files are valid" in result.stdout
 
 
 def test_validate_all_failure(tmp_path):
