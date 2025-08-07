@@ -1,5 +1,5 @@
 ### PR Deployment Checklist
 
-- [ ] Deployment PR (will trigger PyPI release)
-- [ ] Non-deployment PR (documentation, chores, automation)
-- [ ] Changelog updated (Codex automation task run after GitHub Release)
+- [ ] This PR is a deployment PR
+    - If yes, use [minor] or [patch] in your squash-merge commit message
+- [ ] This PR is NOT a deployment PR (no [minor]/[patch] in commit message)

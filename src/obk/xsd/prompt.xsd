@@ -1,170 +1,182 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- OBK / GSL prompt schema • 2025-08-05 -->
+
+<!-- ========================================================= -->
+<!--  SCHEMA DECLARATION & ROOT SETTINGS                       -->
+<!-- ========================================================= -->
+
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            elementFormDefault="qualified"
            attributeFormDefault="unqualified">
 
-  <!-- 1.  Base simple types -->
-  <xs:simpleType name="traceIdType">
-    <xs:restriction base="xs:string">
-      <xs:pattern value="\d{8}T\d{6}[+-]\d{4}"/>
-    </xs:restriction>
-  </xs:simpleType>
+  <!-- =============================================== -->
+  <!-- 1. TYPE DEFINITIONS                            -->
+  <!-- =============================================== -->
+  <!-- All <xs:simpleType> and <xs:complexType> here. -->
 
-  <!-- Raw text / markdown -->
-  <xs:complexType name="textOnlyType">
-    <xs:simpleContent>
-      <xs:extension base="xs:string"/>
-    </xs:simpleContent>
-  </xs:complexType>
+ 	
+	<!-- Shared Simple Types -->
+    <xs:simpleType name="traceIdType">
+      <xs:restriction base="xs:string">
+        <xs:pattern value="\d{8}T\d{6}[+-]\d{4}"/>
+      </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="BooleanString">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="true"/>
+        <xs:enumeration value="false"/>
+      </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="ManualOnlyType">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="true"/>
+        <xs:enumeration value="false"/>
+      </xs:restriction>
+    </xs:simpleType>
+	
+	<!-- Section-Specific Simple Types -->
+	<xs:simpleType name="PromptTypeEnum">
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="feat"/>
+        <xs:enumeration value="fix"/>
+        <xs:enumeration value="build"/>
+        <xs:enumeration value="chore"/>
+        <xs:enumeration value="ci"/>
+        <xs:enumeration value="docs"/>
+        <xs:enumeration value="style"/>
+        <xs:enumeration value="refactor"/>
+        <xs:enumeration value="perf"/>
+        <xs:enumeration value="test"/>
+      </xs:restriction>
+    </xs:simpleType>
 
-  <!-- 2.  Global elements -->
-  <xs:element name="gsl-label"        type="textOnlyType"/>
-  <xs:element name="gsl-title"        type="textOnlyType"/>
-  <xs:element name="gsl-description"  type="textOnlyType"/>
-  <xs:element name="gsl-value"        type="textOnlyType"/>
 
-  <!-- metadata only: no gsl-value (not used in sequences) -->
-  <xs:group name="globalMetaGroup">
-    <xs:all>
-      <xs:element ref="gsl-label"       minOccurs="0"/>
-      <xs:element ref="gsl-title"       minOccurs="0"/>
-      <xs:element ref="gsl-description" minOccurs="0"/>
-    </xs:all>
-  </xs:group>
-
-  <!-- full set (metadata + optional value) (not used in sequences) -->
-  <xs:group name="globalElementsGroup">
-    <xs:all>
-      <xs:element ref="gsl-label"       minOccurs="0"/>
-      <xs:element ref="gsl-title"       minOccurs="0"/>
-      <xs:element ref="gsl-description" minOccurs="0"/>
-      <xs:element ref="gsl-value"       minOccurs="0"/>
-    </xs:all>
-  </xs:group>
-
-  <!-- 3.  Re-usable container types -->
-  <xs:complexType name="containerType">
-    <xs:sequence>
-      <xs:element ref="gsl-label"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-title"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-description" minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-value"       minOccurs="0" maxOccurs="1"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <!-- Field inside gsl-surgery: metadata (opt) + exactly one value -->
-  <xs:complexType name="surgeryFieldType">
-    <xs:sequence>
-      <xs:element ref="gsl-label"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-title"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-description" minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-value"       minOccurs="1" maxOccurs="1"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <!-- gsl-test body may be plain text / code, so mixed="true" -->
-  <xs:complexType name="testType" mixed="true">
-    <xs:sequence>
-      <xs:element ref="gsl-label"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-title"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-description" minOccurs="0" maxOccurs="1"/>
-    </xs:sequence>
-    <xs:attribute name="id" type="xs:string" use="required"/>
-  </xs:complexType>
-
-  <!-- TDD section: metadata + tests (1+) -->
-  <xs:complexType name="tddType">
-    <xs:sequence>
-      <xs:element ref="gsl-label"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-title"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-description" minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-test"        minOccurs="1" maxOccurs="unbounded"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <!-- gsl-surgery block: metadata + five optional children (no dups) -->
-  <xs:complexType name="surgeryBlockType">
-    <xs:sequence>
-      <xs:element ref="gsl-label"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-title"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-description" minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-when"        minOccurs="0"/>
-      <xs:element ref="gsl-what"        minOccurs="0"/>
-      <xs:element ref="gsl-why"         minOccurs="0"/>
-      <xs:element ref="gsl-impact"      minOccurs="0"/>
-      <xs:element ref="gsl-action"      minOccurs="0"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <!-- 4.  Element declarations -->
-  <xs:element name="gsl-when"   type="surgeryFieldType"/>
-  <xs:element name="gsl-what"   type="surgeryFieldType"/>
-  <xs:element name="gsl-why"    type="surgeryFieldType"/>
-  <xs:element name="gsl-impact" type="surgeryFieldType"/>
-  <xs:element name="gsl-action" type="surgeryFieldType"/>
-
-  <xs:element name="gsl-surgery" type="surgeryBlockType"/>
-
-  <!-- Simple container non-text sections -->
-  <xs:element name="gsl-purpose"        type="containerType"/>
-  <xs:element name="gsl-inputs"         type="containerType"/>
-  <xs:element name="gsl-outputs"        type="containerType"/>
-  <xs:element name="gsl-workflows"      type="containerType"/>
-  <xs:element name="gsl-document-spec"  type="containerType"/>
-
-  <!-- Other text-only elements -->
-  <xs:element name="gsl-header" type="textOnlyType"/>
-
-  <xs:element name="gsl-test" type="testType"/>
-  <xs:element name="gsl-tdd"  type="tddType"/>
-
-  <!-- Main content block -->
-  <xs:complexType name="blockType">
-    <xs:sequence>
-      <xs:element ref="gsl-label"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-title"       minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-description" minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="gsl-purpose"/>
-      <xs:element ref="gsl-inputs"/>
-      <xs:element ref="gsl-outputs"/>
-      <xs:element ref="gsl-workflows"/>
-      <xs:element ref="gsl-tdd"/>
-      <xs:element ref="gsl-surgery"      minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element ref="gsl-document-spec"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:element name="gsl-block" type="blockType"/>
-
-  <!-- Root: gsl-prompt -->
-  <xs:element name="gsl-prompt">
-    <xs:complexType>
+    <!-- Shared Container Complex Types -->
+    <xs:complexType name="GlobalFieldsOnlyType">
       <xs:sequence>
         <xs:element ref="gsl-label"       minOccurs="0" maxOccurs="1"/>
         <xs:element ref="gsl-title"       minOccurs="0" maxOccurs="1"/>
         <xs:element ref="gsl-description" minOccurs="0" maxOccurs="1"/>
         <xs:element ref="gsl-value"       minOccurs="0" maxOccurs="1"/>
-        <xs:element ref="gsl-header"      minOccurs="1" maxOccurs="1"/>
-        <xs:element ref="gsl-block"       minOccurs="1" maxOccurs="1"/>
       </xs:sequence>
-      <xs:attribute name="id" type="traceIdType" use="required"/>
-      <xs:attribute name="type" use="required">
-        <xs:simpleType>
-          <xs:restriction base="xs:string">
-            <xs:enumeration value="feat"/>
-            <xs:enumeration value="fix"/>
-            <xs:enumeration value="build"/>
-            <xs:enumeration value="chore"/>
-            <xs:enumeration value="ci"/>
-            <xs:enumeration value="docs"/>
-            <xs:enumeration value="style"/>
-            <xs:enumeration value="refactor"/>
-            <xs:enumeration value="perf"/>
-            <xs:enumeration value="test"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:attribute>
     </xs:complexType>
+
+    <!-- Section-Specific Complex Types -->
+    <xs:complexType name="BlockType">
+      <xs:sequence>
+        <xs:element ref="gsl-label"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-title"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-description"       minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-value"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-purpose"           minOccurs="1" maxOccurs="1"/>
+        <xs:element ref="gsl-inputs"            minOccurs="1" maxOccurs="1"/>
+        <xs:element ref="gsl-outputs"           minOccurs="1" maxOccurs="1"/>
+        <xs:element ref="gsl-workflows"         minOccurs="1" maxOccurs="1"/>
+        <xs:element ref="gsl-acceptance-tests"  minOccurs="1" maxOccurs="1"/>
+		<xs:element ref="gsl-breaking-change" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="AcceptanceTestType">
+      <xs:sequence>
+        <xs:element ref="gsl-label"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-title"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-description"       minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-value"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-filename"          minOccurs="0" maxOccurs="1"/>
+		<xs:element ref="gsl-user-type"         minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-acceptance-criteria" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-performed-action"  minOccurs="1" maxOccurs="1"/>
+        <xs:element ref="gsl-expected-result"   minOccurs="1" maxOccurs="1"/>
+      </xs:sequence>
+      <xs:attribute name="id"          type="xs:string"     use="required"/>
+      <xs:attribute name="manual-only" type="ManualOnlyType" use="optional"/>
+    </xs:complexType>
+	
+    <xs:complexType name="BreakingChangeType">
+      <xs:sequence>
+        <!-- Optional global fields -->
+        <xs:element ref="gsl-label"       minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-title"       minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-description" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-value"       minOccurs="0" maxOccurs="1"/>
+        
+        <!-- Required breaking change elements -->
+        <xs:element name="gsl-language-maintenance" type="xs:string"/>
+        <xs:element name="gsl-content-migration" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+
+
+  <!-- =============================================== -->
+  <!-- 2. ELEMENT DECLARATIONS                        -->
+  <!-- =============================================== -->
+  <!-- All <xs:element name="..."> (with type=...) here,
+       including the root element at the end.         -->
+
+    <!-- Text-Only Leaf Elements -->
+    <xs:element name="gsl-label"       type="xs:string"/>
+    <xs:element name="gsl-title"       type="xs:string"/>
+    <xs:element name="gsl-description" type="xs:string"/>
+    <xs:element name="gsl-value"       type="xs:string"/>
+    <xs:element name="gsl-header"      type="xs:string"/>
+	<xs:element name="gsl-filename" type="xs:string"/>
+	<xs:element name="gsl-user-type" type="xs:string"/>
+	<xs:element name="gsl-acceptance-criteria" type="xs:string"/>
+	<xs:element name="gsl-performed-action"    type="xs:string"/>
+    <xs:element name="gsl-expected-result"     type="xs:string"/>
+
+
+    <!-- Global-Fields-Only Container Elements -->
+    <xs:element name="gsl-purpose"       type="GlobalFieldsOnlyType"/>
+	<xs:element name="gsl-inputs"        type="GlobalFieldsOnlyType"/>
+    <xs:element name="gsl-outputs"       type="GlobalFieldsOnlyType"/>
+    <xs:element name="gsl-workflows"     type="GlobalFieldsOnlyType"/>
+    
+
+    <!-- Block/Section Container Elements -->
+    <xs:element name="gsl-block" type="BlockType"/>
+
+    <!-- Acceptance Test Elements -->
+    <xs:element name="gsl-acceptance-test"  type="AcceptanceTestType"/>
+    <xs:element name="gsl-acceptance-tests">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="gsl-label"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-title"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-description"       minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-value"             minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="gsl-acceptance-test"   minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+    <xs:unique name="uniqueAcceptanceTestId">
+      <xs:selector xpath="gsl-acceptance-test"/>
+      <xs:field xpath="@id"/>
+    </xs:unique>
   </xs:element>
+	
+	<!-- Breaking Change Elements -->
+	<xs:element name="gsl-breaking-change" type="BreakingChangeType"/>
+
+
+    <!-- Root Element -->
+    <xs:element name="gsl-prompt">
+      <xs:complexType>
+        <xs:sequence>
+          <!-- Global header fields (optional, if present must be in this order) -->
+          <xs:element ref="gsl-label"       minOccurs="0"/>
+          <xs:element ref="gsl-title"       minOccurs="0"/>
+          <xs:element ref="gsl-description" minOccurs="0"/>
+          <xs:element ref="gsl-value"       minOccurs="0"/>
+
+          <!-- Main required document sections -->
+          <xs:element ref="gsl-header"           minOccurs="1" maxOccurs="1"/>
+          <xs:element ref="gsl-block"            minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute name="id"   type="traceIdType" use="required"/>
+        <xs:attribute name="type" type="PromptTypeEnum" use="required"/>
+		<xs:attribute name="changelog" type="BooleanString" use="optional"/>
+      </xs:complexType>
+    </xs:element>
 
 </xs:schema>

@@ -1,169 +1,218 @@
 # AGENTS.md
 
-## Overview
+---
 
-This document defines agent-facing policies, the GSL data dictionary, automation boundaries, file organization rules, conventions, and a comprehensive glossary for the OBK repository.  
-It is the authoritative source for how agents (including Codex) and humans interact with repository artifacts, which GSL elements are in use, and how prompt/automation files are structured and validated.
+## GSL Prompt Files
 
-* * *
+#### 1. Overview
 
-| Element               | Description                                                  | Typical Content                                                         | Attributes                                        | Type         |
-| --------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------- | ------------ |
-| `<gsl-prompt>`        | Root element for the prompt document. Contains all sections. | All other elements                                                      | `id` (required), `type`, default: feat) | **Non-Text** |
-| `<gsl-description>`   | Optional summary or context (global).                        | Text                                                                    | None                                              | **Text**     |
-| `<gsl-header>`        | Human-friendly title, often a Markdown header.               | One line of text/Markdown header                                        | None                                              | **Text**     |
-| `<gsl-block>`         | Main container for content sections.                         | Other GSL elements                                                      | None                                              | **Non-Text** |
-| `<gsl-purpose>`       | Purpose/intention for the prompt/task.                       | Freeform text/Markdown                                                  | None                                              | **Text**     |
-| `<gsl-inputs>`        | Required files, resources, or dependencies.                  | `<gsl-label>`, `<gsl-title>`, `<gsl-description>`, `<gsl-value>`        | None                                              | **Non-Text** |
-| `<gsl-outputs>`       | Expected deliverables/results.                               | `<gsl-label>`, `<gsl-title>`, `<gsl-description>`, `<gsl-value>`        | None                                              | **Non-Text** |
-| `<gsl-workflows>`     | Step-by-step procedures or command guides.                   | `<gsl-label>`, `<gsl-title>`, `<gsl-description>`, `<gsl-value>`        | None                                              | **Non-Text** |
-| `<gsl-tdd>`           | Section for TDD/tests.                                       | `<gsl-label>`, `<gsl-title>`, `<gsl-description>`, `<gsl-test>`         | None                                              | **Non-Text** |
-| `<gsl-test>`          | Single test case definition.                                 | Description, code, CLI command                                          | `id` (required, unique)                           | **Text**     |
-| `<gsl-document-spec>` | Maintenance/update rules for the prompt doc.                 | `<gsl-label>`, `<gsl-title>`, `<gsl-description>`, `<gsl-value>`        | None                                              | **Non-Text** |
-| `<gsl-surgery>`       | Documents a major/breaking/removal/change event.             | `<gsl-when>`, `<gsl-what>`, `<gsl-why>`, `<gsl-impact>`, `<gsl-action>` | None                                              | **Non-Text** |
-| `<gsl-when>`          | When a change occurred (non-text).                           | `<gsl-label>`, `<gsl-title>`, `<gsl-value>`                             | None                                              | **Non-Text** |
-| `<gsl-what>`          | What was changed/removed (non-text).                         | `<gsl-label>`, `<gsl-title>`, `<gsl-value>`                             | None                                              | **Non-Text** |
-| `<gsl-why>`           | Why the change occurred (non-text).                          | `<gsl-label>`, `<gsl-title>`, `<gsl-value>`                             | None                                              | **Non-Text** |
-| `<gsl-impact>`        | Impact of change (non-text).                                 | `<gsl-label>`, `<gsl-title>`, `<gsl-value>`                             | None                                              | **Non-Text** |
-| `<gsl-action>`        | Follow-up/mitigation (non-text).                             | `<gsl-label>`, `<gsl-title>`, `<gsl-value>`                             | None                                              | **Non-Text** |
-| `<gsl-label>`         | UI-style field label (global).                               | Text                                                                    | None                                              | **Text**     |
-| `<gsl-title>`         | Section/element headline (global).                           | Text                                                                    | None                                              | **Text**     |
-| `<gsl-value>`         | Value of a non-text element (global).                        | Text, date, ID, etc.                                                    | None                                              | **Text**     |
+This section describes the schema, structure, and business rules for OBK GSL Prompt Markdown files containing customer XML. They are used to define agent prompts in the OBK system.
+
+- All prompt files **must** validate against the authoritative XML Schema (`prompt.xsd`).
+- Additional business rules (e.g., ID uniqueness) are enforced by downstream tooling or the database layer.
 
 
-_(Extend table as new elements/attributes are added)_
 
-* * *
+#### 2. Element Reference
 
-## 2. Core Conventions & File Organization
+##### 2.1 Root Element – `<gsl-prompt>`
 
-### 2.1 Deterministic File Paths
+*Attributes*  
+- **id** (required): Unique trace ID (`traceIdType`, `YYYYMMDDTHHmmSS±ZZZZ`).  
+- **type** (required): One of `feat | fix | build | chore | ci | docs | style | refactor | perf | test`.  
+- **changelog** (optional): `"true"` or `"false"` (**must be lowercase**).
 
-* Prompt files are stored under `prompts/YYYY/MM/DD/`, using UTC or agreed timezone.
-    
-* Filenames are trace IDs or timestamps (e.g., `20250803T120000+0000.md`).
-    
+*Children (in order)*  
+1. `<gsl-label>` (optional)  
+2. `<gsl-title>` (optional)  
+3. `<gsl-description>` (optional)  
+4. `<gsl-value>` (optional)  
+5. `<gsl-header>` (**required**)  
+6. `<gsl-block>` (**required**)
 
-### 2.2 Mixing Markdown with GSL
 
-* All GSL element tags must be **left-justified** (no indentation).
-    
-* There must be an **empty line below any GSL opening tag** if the next line is text or Markdown.
-    
+> Only the elements and attributes described here are valid within the `<gsl-prompt>` XML element and its children. Elements or attributes not defined in the schema (such as `<div>`) will cause XML schema validation to fail.
 
-### 2.3 Non-Text Elements
+##### 2.2 Global Fields (may appear in many containers)
 
-* The following are **non-text elements**—they must **never** contain direct text.  
-    All content must be in a child element such as `<gsl-description>`, `<gsl-value>`, `<gsl-title>`, or `<gsl-label>`:
-    
-    * `<gsl-block>`
-        
-    * `<gsl-inputs>`
-        
-    * `<gsl-outputs>`
-        
-    * `<gsl-workflows>`
-        
-    * `<gsl-tdd>`
-        
-    * `<gsl-test>`
-        
-    * `<gsl-document-spec>`
-        
-    * `<gsl-purpose>`
-        
-    * `<gsl-surgery>`
-        
-    * `<gsl-when>`
-        
-    * `<gsl-what>`
-        
-    * `<gsl-why>`
-        
-    * `<gsl-impact>`
-        
-    * `<gsl-action>`
-        
-* **Text-only elements** (such as `<gsl-description>`) are for direct text/Markdown and do not require wrapping.
-    
+- `<gsl-label>` – Text label  
+- `<gsl-title>` – Title or summary  
+- `<gsl-description>` – Detailed description  
+- `<gsl-value>` – Arbitrary value or data  
 
-### 2.4 Global Elements
+##### 2.3 <gsl-header>
 
-* `<gsl-label>`, `<gsl-title>`, `<gsl-description>` and `<gsl-value>` are **global elements**.  
-    They may appear 0 or 1 time each as first children in any non-global, non-text element (in any order).
-    
+- **Required.** Must appear **exactly once** as a direct child of `<gsl-prompt>`, after any global fields and before `<gsl-block>`.
+- **Content:** A single text value (no child elements, no attributes).
+- **Purpose:** Used as the canonical, displayable header for the agent prompt.
 
-### 2.5 Trace IDs
 
-* Prompts and select sub-elements require unique `trace ID`s (`YYYYMMDDTHHMMSS±ZZZZ`).
-    
-* IDs are validated for uniqueness and format.
-    
 
-### 2.6 Validation & Harmonization
+##### 2.4 Main Block Structure – `<gsl-block>`
 
-* Validation checks for schema compliance, required attributes, structure, and forbidden direct text.
-    
-* Harmonization functions may auto-correct spacing and justification.
-    
+Children **must appear in this order**; for elements marked *required*, they must appear **exactly once**. For all others, at most once (if present).
 
-* * *
+1. `<gsl-label>` (optional, at most once)
+2. `<gsl-title>` (optional, at most once)
+3. `<gsl-description>` (optional, at most once)
+4. `<gsl-value>` (optional, at most once)
+5. `<gsl-purpose>` (**required**, exactly once)
+6. `<gsl-inputs>` (**required**, exactly once)
+7. `<gsl-outputs>` (**required**, exactly once)
+8. `<gsl-workflows>` (**required**, exactly once)
+9. `<gsl-acceptance-tests>` (**required**, exactly once)
+10. `<gsl-breaking-change>` (optional, at most once)
 
-## 3. Agent Automation Guidance
 
-* **Editable Sections:**  
-    Agents may edit, update, or append to sections marked as agent-editable or by repo policy.
-    
-* **Human-only Sections:**  
-    Elements like `<gsl-document-spec>` or major specs are reserved for human maintainers.
-    
-* **Obsoleting Elements:**  
-    To mark an element, process, or convention as obsolete, update relevant docs (data dictionary, prompt, article) using **obsoleted** (in comments, a `status="obsolete"` attribute, or glossary note). Obsoleting is a documentation/policy action and does not require structural markup.
-    
-* **Surgical Changes (“Surgery”):**  
-    Major structure/data/workflow changes should be recorded using `<gsl-surgery>`, whether or not obsoleting is involved. Surgery is a structural/historical record, not a policy change.
-    
-* **Distinction:**  
-    _Obsoleting_ and _surgery_ may overlap but are distinct—obsoleting is status/policy, surgery is structural/historical.
-    
-* **New elements/extensions** must be added here and reviewed before agent/automation use.
-    
+> *Note:* Optional elements may appear at most once. Required elements must appear exactly once.
+The global fields (label, title, description, value) must always be in this order.
 
-* * *
 
-## 4. Glossary of Key Terms
 
-| Term | Definition |
-| --- | --- |
-| **article** | A Markdown document (often in `articles/`) describing a new feature, bug, process, or policy. Usually serves as the narrative basis for new work or discussion. |
-| **prompt** | The core structured document (with root `<gsl-prompt>`) that defines the context, requirements, and validation logic for a development or automation task. |
-| **task** | An actionable, trackable unit of work (sometimes mapped to a prompt or a Codex job). Can be either ad hoc (feature, bugfix) or maintenance (refactor, docs, etc.). |
-| **Codex** | OpenAI’s advanced code-generation and automation product, integrated into ChatGPT since May 2025. In GSL, Codex agents interpret, generate, and automate code and documentation based on prompts, tasks, and directives. |
-| **conversation** | A sequence of user and agent interactions, typically from a chat session; conversations can be saved, exported, or reintroduced for continuity. |
-| **chat session** | A live, interactive communication window (e.g., with Codex, OBK, or ChatGPT), where one or more conversations may take place. |
-| **directive** | An instruction, rule, or command. Directives may appear in prompts, tasks, or specifications; sometimes specification-like (rule), sometimes imperative (do this). Only tasks and prompts are formally tracked as artifacts. |
-| **harmonization** | The process of rewriting or formatting prompt files so their structure, whitespace, and tag layout match GSL conventions, ensuring consistency and parseability. |
-| **GSL document** | A Markdown file combining custom GSL XML elements and Markdown prose. GSL documents are both human-readable and machine-parseable, and can be rendered as HTML. |
-| **extended GSL** | New or planned additions to GSL, such as `<gsl-label>`, `<gsl-title>`, `<gsl-surgery>`, or the `type` attribute. These features may be adopted by teams as needs arise, expanding the capabilities of GSL while maintaining compatibility. |
-| **obsoleting** | The act of formally marking a GSL element, prompt, workflow, or convention as no longer recommended or in active use, often in favor of a newer or extended alternative. Obsoleted items remain for historical reference and backward compatibility. |
-| **feature workflow** | The recommended step-by-step process for adding new features, from writing an article and a prompt, through Codex-driven development, to testing and review. |
-| **release workflow** | The recommended process for preparing, reviewing, and deploying a new release, including all validation, documentation, and post-release updates. |
-| **deterministic date file path** | The strict convention for prompt file storage: `prompts/YYYY/MM/DD/`, ensuring reproducibility and automation compatibility. |
-| **trace ID** | A unique, time-based identifier for each prompt file and some elements, generated as `YYYYMMDDTHHMMSS±ZZZZ` (see `trace_id.py`). Used for tracking and validation. |
-| **agent** | Any automation, such as Codex, that interprets, edits, or maintains repository artifacts based on GSL documents and this AGENTS.md. |
-| **obsoleted** | A status assigned to elements, attributes, or processes that are no longer recommended for use, but may remain in the codebase or documentation for historical reference. |
-| **surgery** | A major structural change, removal, or replacement—recorded using the `<gsl-surgery>` element. Surgery documents what, when, why, and the impact/action of the change. |
-| **global elements** | Elements like `<gsl-label>`, `<gsl-title>`, and `<gsl-value>`, which may be used as first children in most non-text, non-global elements for labeling, titling, or providing values. |
-| **non-text elements** | GSL elements that must not contain direct text content; instead, all content must be in child elements such as `<gsl-value>`, `<gsl-title>`, or `<gsl-label>`. See section 2.3 for a complete list. |
-| **text-only elements** | GSL elements intended for direct text or Markdown content, such as `<gsl-description>`. |
+##### 2.5 Acceptance Test Branch
 
-* * *
+###### 2.5.1 `<gsl-acceptance-tests>`
 
-## 5. Living Document Policy
+- Must contain **one or more** `<gsl-acceptance-test>` elements.
+- May contain, in this order and at most once each:  
+    1. `<gsl-label>` (optional)  
+    2. `<gsl-title>` (optional)  
+    3. `<gsl-description>` (optional)  
+    4. `<gsl-value>` (optional)
+- These fields, if present, must appear before any `<gsl-acceptance-test>`.
 
-* AGENTS.md must be kept current with any schema, convention, or process changes—before updating code or automation.
-    
-* Any discrepancy between AGENTS.md and code is considered a bug and should be resolved promptly.
-    
 
-* * *
+###### 2.5.2 `<gsl-acceptance-test>`
+
+*Attributes*  
+- **id** (required): Unique trace ID matching the pattern `YYYYMMDDTHHmmSS±ZZZZ` (specifically: eight digits for date, a 'T', six digits for time, a plus or minus, then four digits for the time zone offset; e.g., `20250805T153000+0000`).  
+    **Pattern:** `\d{8}T\d{6}[+-]\d{4}`
+- **manual-only** (optional): `"true"` or `"false"` (**must be lowercase**).
+
+*Children (in order; first four are Global Fields and may each appear at most once):*
+
+1. `<gsl-label>` (optional)
+2. `<gsl-title>` (optional)
+3. `<gsl-description>` (optional)
+4. `<gsl-value>` (optional)
+5. `<gsl-filename>` (optional, 0‥1)
+6. `<gsl-user-type>` (optional, 0‥1)
+7. `<gsl-acceptance-criteria>` (optional, 0‥1)
+8. `<gsl-performed-action>` (**required**, exactly 1)
+9. `<gsl-expected-result>` (**required**, exactly 1)
+
+> *Note:* The first four elements must appear in this exact order (if present), and at most once each.
+
+
+
+#### 2.6 Breaking Change Section – `<gsl-breaking-change>` (optional, at most once)
+
+- If present, `<gsl-breaking-change>` must appear in this order:
+    1. `<gsl-label>` (optional, at most once)
+    2. `<gsl-title>` (optional, at most once)
+    3. `<gsl-description>` (optional, at most once)
+    4. `<gsl-value>` (optional, at most once)
+    5. `<gsl-language-maintenance>` (required, exactly once)  
+        - Content: text only (no child elements, no attributes)
+    6. `<gsl-content-migration>` (required, exactly once)  
+        - Content: text only (no child elements, no attributes)
+
+
+
+
+
+#### 2.7 Other Single‑Purpose Containers
+
+Each of the following elements:
+- `<gsl-purpose>`
+- `<gsl-inputs>`
+- `<gsl-outputs>`
+- `<gsl-workflows>`
+
+
+**May contain, in this order (all optional, at most once each):**
+1. `<gsl-label>`
+2. `<gsl-title>`
+3. `<gsl-description>`
+4. `<gsl-value>`
+
+No other elements are permitted inside these containers.
+
+
+
+
+#### 3. Validation & Business Rules
+
+##### 3.1 XSD‑Enforced Rules
+
+3.1.1 Element order, cardinality, and text/Non‑Text constraints follow the sequences above.  
+3.1.2 `<gsl‑prompt>` `type` attribute **must** be one of the ten enumerated values.  
+3.1.3 Boolean attributes (`changelog`, `manual-only`) accept only `"true"` or `"false"` (**must be lowercase**).
+
+##### 3.2 Business / Implementation Rules
+
+3.2.1 **Trace ID uniqueness:** `id` on `<gsl‑prompt>` must be unique across all prompt files.  
+3.2.2 **Acceptance test ID uniqueness:** `id` on `<gsl‑acceptance-test>` must be unique within a file.  
+3.2.3 If `<gsl-breaking-change>` is present, both `<gsl-language-maintenance>` and `<gsl-content-migration>` must appear exactly once, in that order.  
+3.2.4 Each file contains exactly **one** `<gsl-prompt>` root element.
+
+##### 3.3 Custom / Project‑Specific Rules
+
+3.3.1 _Add additional organization‑specific rules here as they are adopted._
+
+
+
+#### 4. Change History
+
+*(Record significant schema or policy changes with dates.)*
+
+
+
+#### 5. Example – Minimal Valid Prompt
+
+```xml
+<gsl-prompt id="20250805T120000+0000" type="feat">
+  <gsl-label>Example Agent</gsl-label>
+  <gsl-header>Sample Header</gsl-header>
+
+  <gsl-block>
+    <gsl-purpose>
+      <gsl-title>Purpose</gsl-title>
+      <gsl-description>Explain what the agent does.</gsl-description>
+    </gsl-purpose>
+
+    <gsl-inputs>
+      <gsl-label>Input Files</gsl-label>
+      <gsl-value>config.yml</gsl-value>
+    </gsl-inputs>
+
+    <gsl-outputs>
+      <gsl-label>Outputs</gsl-label>
+      <gsl-value>analysis.json</gsl-value>
+    </gsl-outputs>
+
+    <gsl-workflows>
+      <gsl-title>Steps</gsl-title>
+      <gsl-description>Step‑by‑step guide …</gsl-description>
+    </gsl-workflows>
+
+    <gsl-acceptance-tests>
+      <gsl-acceptance-test id="T1">
+        <gsl-title>Happy‑path login</gsl-title>
+        <gsl-user-type>admin</gsl-user-type>
+        <gsl-performed-action>Log in with valid credentials</gsl-performed-action>
+        <gsl-expected-result>Dashboard is displayed</gsl-expected-result>
+      </gsl-acceptance-test>
+    </gsl-acceptance-tests>
+
+    <!-- Optional breaking change -->
+    <!--
+    <gsl-breaking-change>
+      <gsl-language-maintenance>Update deprecated API calls.</gsl-language-maintenance>
+      <gsl-content-migration>Transform existing JSON files.</gsl-content-migration>
+    </gsl-breaking-change>
+    -->
+  </gsl-block>
+</gsl-prompt>
+```
+---

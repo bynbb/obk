@@ -1,9 +1,11 @@
 # obk
 
 > ⚠️ This project is in early development (pre-release/alpha).
-> The current release is a “hello world” scaffold. APIs and behavior will change rapidly as features are added over the coming weeks.
+> APIs and behavior will change rapidly as features are added.
 
-Minimal CLI demonstrating dependency injection and error-handled commands.
+OBK is a programmable system for documenting, validating, and querying project
+knowledge via structured prompts validated with XSD and stored for later
+analysis.
 
 ## Installation
 
@@ -22,53 +24,14 @@ obk trace-id
 ## Features
 
 * `hello-world` prints a greeting
-* `divide` divides two numbers with zero-checking
-* `greet` greets by name with optional excitement
-* `fail` triggers a fatal error for testing
-* `validate-*`, `harmonize-*`, and `trace-id` handle prompt management tasks
-
-## GSL Example
-
-```xml
-<gsl-prompt id="20250803T120000+0000" type="feat">
-<gsl-header>
-
-Example
-</gsl-header>
-<gsl-block>
-<gsl-purpose>
-
-p
-</gsl-purpose>
-<gsl-inputs>
-
-i
-</gsl-inputs>
-<gsl-outputs>
-
-o
-</gsl-outputs>
-<gsl-workflows/>
-<gsl-tdd><gsl-test id="T1">t</gsl-test></gsl-tdd>
-<gsl-document-spec>
-
-d
-</gsl-document-spec>
-<gsl-surgery>
-<gsl-when>
-<gsl-value>
-
-2025-08-02
-</gsl-value>
-</gsl-when>
-</gsl-surgery>
-</gsl-block>
-</gsl-prompt>
-```
+* `divide` divides numbers with zero-checking
+* `greet` greets by name; `fail` triggers a fatal error
+* `validate-*` validates prompt files; `harmonize-*` normalizes them
+* `trace-id` generates unique trace IDs
 
 ## Usage
 
-For help on available commands:
+For help on any command:
 
 ```bash
 obk --help
@@ -81,3 +44,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## License
 
 MIT
+

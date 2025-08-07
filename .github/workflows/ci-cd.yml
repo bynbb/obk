@@ -43,17 +43,29 @@ jobs:
     needs: build
     if: >
       success() &&
-      contains(github.event.head_commit.message, '[deploy]')
+      (contains(github.event.head_commit.message, '[minor]') ||
+       contains(github.event.head_commit.message, '[patch]'))
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+    
+      - name: Set GITHUB_COMMIT_MESSAGE env
+        run: |
+          {
+            echo 'GITHUB_COMMIT_MESSAGE<<EOF'
+            git log -1 --pretty=%B
+            echo 'EOF'
+          } >> $GITHUB_ENV
+        
+    
       - name: Set up venv, bump version, and deploy
         run: |
           python3 -m venv .venv
           .venv/bin/pip install --upgrade pip build twine
-          .venv/bin/python .github/scripts/bump_patch.py
+          .venv/bin/python .github/scripts/bump_version.py
           .venv/bin/python -m build
           .venv/bin/twine upload dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+    

@@ -13,8 +13,6 @@ While the XSD schema defines most structural requirements, **critical rules are 
 
 * Global elements must appear first and not be duplicated
     
-* Surgery subelements (like `<gsl-when>`, `<gsl-what>`) must each include a `<gsl-value>`
-    
 * Prohibiting direct text in non-text elements
     
 
@@ -102,30 +100,12 @@ Reduces interoperability for teams with mixed tech stacks.
 * Provide detailed validation specs that can be ported or interpreted by tooling in other languages.
     
 * Where complex Python logic is required, document it thoroughly and provide reference implementations.
+   
     
 
 * * *
 
-## 5. Limited Audit/Meta Extensibility
-
-**Limitation:**  
-The `<gsl-surgery>` element uses a fixed set of subelements and does not support custom audit fields, multiple values, or richer objects.
-
-**Impact:**  
-Future audit requirements or richer history may require breaking schema changes.
-
-**How to Solve:**
-
-* Refactor `<gsl-surgery>` to allow `<xs:any>` or `<xs:choice>` for custom audit fields.
-    
-* Document how to extend or version audit history elements if needs evolve.
-    
-* Add clear migration steps for introducing future extensibility.
-    
-
-* * *
-
-## 6. Only XML/XSD-Driven Workflows Supported
+## 5. Only XML/XSD-Driven Workflows Supported
 
 **Limitation:**  
 Schema is XML-based; JSON, YAML, or Markdown workflows need adapters or converters.
@@ -144,7 +124,7 @@ Non-XML automation will need extra engineering effort.
 
 * * *
 
-## 7. Error Messages and Usability
+## 6. Error Messages and Usability
 
 **Limitation:**  
 Errors from custom Python validation may be less discoverable, less user-friendly, or harder to fix than schema errors.
@@ -163,7 +143,7 @@ Non-Python contributors may struggle to debug or understand issues.
 
 * * *
 
-## 8. No Support for Mixed-Content or Hybrid Elements
+## 7. No Support for Mixed-Content or Hybrid Elements
 
 **Limitation:**  
 Schema and Python logic disallow mixed content (no text + child elements).

@@ -8,12 +8,7 @@ import xmlschema
 
 from .preprocess import preprocess_text
 
-GLOBAL_ELEMENTS = {"gsl-label", "gsl-title", "gsl-value"}
-
-PROMPT_SCHEMA_MAP = {
-    "gsl": "prompt.xsd",
-    "surgery": "prompt.xsd",
-}
+GLOBAL_ELEMENTS = {"gsl-label", "gsl-title", "gsl-description", "gsl-value"}
 
 
 def get_schema_path(schema_name: str) -> Path:
@@ -40,7 +35,7 @@ def validate_all(prompts_dir: Path) -> Tuple[List[str], int, int]:
         text = file_path.read_text(encoding="utf-8")
         processed, _ = preprocess_text(text)
         prompt_type = detect_prompt_type(file_path)
-        schema_name = PROMPT_SCHEMA_MAP.get(prompt_type, "prompt.xsd")
+        schema_name = "prompt.xsd"
         schema_path = get_schema_path(schema_name)
         schema = xmlschema.XMLSchema(str(schema_path))
         try:

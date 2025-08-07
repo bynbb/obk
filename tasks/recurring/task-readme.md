@@ -7,11 +7,15 @@ Ensure the `README.md` at the repository root exists and accurately summarizes t
 
 ### Steps
 
-1. **Review Current Codebase**
+1. **Review the Prompts Folder and Current Codebase**
+    
+    * Review the files in `prompts` to set context of progress.
     
     * Scan the codebase for current functionality, CLI commands, major modules, and setup steps.
         
     * Note any features, requirements, or usage examples needed for basic understanding.
+
+
         
 2. **Create or Update README.md**
     
@@ -50,7 +54,7 @@ Ensure the `README.md` at the repository root exists and accurately summarizes t
 > ⚠️ This project is in early development (pre-release/alpha).  
 > The current release is a “hello world” scaffold. APIs and behavior will change rapidly as features are added over the coming weeks.
 
-Minimal CLI for [brief description: e.g., "prompt-driven development", customize based on codebase].
+OBK is a programmable system for documenting, validating, and querying project knowledge in a way that travels with the repo. It lets teams define prompts—describing inputs, outputs, workflows, and tests—in a structured, machine-readable way. Prompts are validated with XSD schemas, tracked in SQLite, and made available for both ad-hoc reporting and agent-driven queries. The ultimate goal is to connect OBK to agents that can answer detailed questions about a developing application using this structured data.
 
 ## Installation
 

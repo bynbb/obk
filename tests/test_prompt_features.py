@@ -29,12 +29,6 @@ def _write_prompt(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-# ---------------- fixture -------------------------------------------------
-@pytest.fixture
-def validate_all():
-    return _validate_all
-
-
 # ---------------- reusable XML -------------------------------------------
 VALID_PROMPT = (
     "<?xml version='1.0' encoding='UTF-8'?>\n"
