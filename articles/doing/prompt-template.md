@@ -11,7 +11,7 @@ This template uses GSL elements for reportability and traceability, whether or n
 ```xml
 
 <?xml version="1.0" encoding="UTF-8"?>
-<gsl-prompt id="<!-- PROMPT_ID_HERE -->">
+<gsl-prompt id="<!-- PROMPT_ID_HERE -->" type="<!-- PROMPT_TYPE_VIA_CONVENTIONAL_COMMIT_TAG_HERE -->">
 <gsl-header>
     
 # <!-- Title for this prompt/task, e.g., "Add Feature X" -->
@@ -74,33 +74,34 @@ This template uses GSL elements for reportability and traceability, whether or n
 
 </gsl-description>
 </gsl-workflows>
-
-<gsl-acceptance-tests>
-
-<gsl-label>
-    
-## 5. Acceptance Tests
-</gsl-label>
-
-
 <gsl-acceptance-tests>
 <gsl-label>
 
 ## 5. Acceptance Tests
 </gsl-label>
-<gsl-acceptance-test id="T1">
-<gsl-title>
-
-<!-- e.g., "User is locked out after 10 failed login attempts" --></gsl-title>
+<gsl-acceptance-test id="1">
 <gsl-performed-action>
+
+1. When I lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed feugiat, urna vitae cursus dictum, est purus cursus enim.
 </gsl-performed-action>
 <gsl-expected-result>
+    Then vivamus blandit massa nec velit faucibus, at ultricies sapien gravida. Pellentesque habitant morbi tristique senectus.
+</gsl-expected-result>
+</gsl-acceptance-test>
+
+<gsl-acceptance-test id="2">
+<gsl-performed-action>
+
+2. When I ut placerat orci nulla, at dictum risus viverra ac. Morbi lacinia, nisi id blandit dictum, felis erat rutrum justo.
+</gsl-performed-action>
+<gsl-expected-result>
+    Then curabitur varius, tellus nec pellentesque ultricies, erat urna tristique elit, nec ultricies urna elit ut lectus.
 </gsl-expected-result>
 </gsl-acceptance-test>
 </gsl-acceptance-tests>
+
 </gsl-block>
 </gsl-prompt>
-
 
 ```
 
