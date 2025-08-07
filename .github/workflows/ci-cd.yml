@@ -3,6 +3,11 @@ name: CI-CD Pipeline
 on:
   push:
     branches: main
+    tags:
+      - 'v*.*.*'
+    
+permissions:
+  contents: write
 
 jobs:
   test:
@@ -28,7 +33,6 @@ jobs:
 
   build:
     needs: test
-    if: success()
     runs-on: self-hosted
 
     steps:
@@ -38,34 +42,32 @@ jobs:
           python3 -m venv .venv
           .venv/bin/pip install build
           .venv/bin/python -m build
-
+          
   deploy:
     needs: build
-    if: >
-      success() &&
-      (contains(github.event.head_commit.message, '[minor]') ||
-       contains(github.event.head_commit.message, '[patch]'))
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-    
-      - name: Set GITHUB_COMMIT_MESSAGE env
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python3 -m pip install --upgrade pip toml build twine
+      - name: Validate pyproject.toml version matches tag
         run: |
-          {
-            echo 'GITHUB_COMMIT_MESSAGE<<EOF'
-            git log -1 --pretty=%B
-            echo 'EOF'
-          } >> $GITHUB_ENV
-        
-    
-      - name: Set up venv, bump version, and deploy
-        run: |
-          python3 -m venv .venv
-          .venv/bin/pip install --upgrade pip build twine
-          .venv/bin/python .github/scripts/bump_version.py
-          .venv/bin/python -m build
-          .venv/bin/twine upload dist/*
+          TAG_VERSION="${GITHUB_REF##*/}"
+          PY_VERSION=$(python3 -c "import toml; print(toml.load(open('pyproject.toml'))['project']['version'])")
+          if [ "v$PY_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch: pyproject.toml ($PY_VERSION) != tag (${TAG_VERSION#v})"
+            exit 1
+          fi
+      - name: Build package
+        run: python3 -m build
+      - name: Upload to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: python3 -m twine upload dist/*
     
