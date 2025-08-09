@@ -35,7 +35,7 @@ if dry_run:
 # Real writes
 prompts_dir.mkdir(parents=True, exist_ok=True)
 task_folder.mkdir(parents=True, exist_ok=True)
-content = resources.files("obk.templates").joinpath("prompt.xml").read_text(encoding="utf-8").replace("__TRACE_ID__", tid)
+content = resources.files("obk.templates").joinpath("prompt.md").read_text(encoding="utf-8").replace("__TRACE_ID__", tid)
 with prompt_file.open("w", encoding="utf-8", newline="\n") as fh:
     fh.write(content)
 
@@ -95,7 +95,7 @@ def test_generate_prompt_print_paths_outputs_two_lines(tmp_path: Path, monkeypat
 
     pf = Path(lines[0]); tf = Path(lines[1])
     assert pf.exists() and tf.exists()
-    assert pf.name == f"{tid}.xml" and tf.name == tid
+    assert pf.name == f"{tid}.md" and tf.name == tid
     s = str(pf).replace("\\", "/"); t = str(tf).replace("\\", "/")
     assert "prompts/2025/08/09" in s and "tasks/2025/08/09" in t
 ```
@@ -119,7 +119,7 @@ def test_generate_prompt_dry_run_print_paths_only_two_lines_and_no_writes(tmp_pa
     assert len(lines) == 2
 
     # Ensure nothing was written
-    assert not list(tmp_path.glob("prompts/*/*/*/*.xml"))
+    assert not list(tmp_path.glob("prompts/*/*/*/*.md"))
     assert not list(tmp_path.glob("tasks/*/*/*/*"))
 ```
 

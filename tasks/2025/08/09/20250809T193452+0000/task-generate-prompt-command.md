@@ -130,7 +130,7 @@ Below are the complete files, ready to copy into your repo.
 
 ## Objective
 Create a generator command that:
-- Writes a prompt file to `prompts/YYYY/MM/DD/<TRACE_ID>.xml`
+- Writes a prompt file to `prompts/YYYY/MM/DD/<TRACE_ID>.md`
 - Creates a matching task folder `tasks/YYYY/MM/DD/<TRACE_ID>/`
 - Uses existing trace-id logic and a **packaged** programmatic XML template
 
@@ -387,7 +387,7 @@ from obk.cli import ObkCLI
 runner = CliRunner()
 
 def _count_artifacts(root: Path):
-    prompts = list(root.glob("prompts/*/*/*/*.xml"))
+    prompts = list(root.glob("prompts/*/*/*/*.md"))
     tasks = list(root.glob("tasks/*/*/*/*"))
     return prompts, tasks
 
@@ -420,7 +420,7 @@ def test_generate_prompt_with_date_and_id_exact_paths(tmp_path: Path, monkeypatc
     result = runner.invoke(app, ["generate", "prompt", "--date", "2025-08-09", "--id", tid])
     assert result.exit_code == 0, result.output
 
-    pf = tmp_path / "prompts" / "2025" / "08" / "09" / f"{tid}.xml"
+    pf = tmp_path / "prompts" / "2025" / "08" / "09" / f"{tid}.md"
     tf = tmp_path / "tasks" / "2025" / "08" / "09" / tid
     assert pf.exists(), f"missing prompt file: {pf}"
     assert tf.exists(), f"missing task folder: {tf}"

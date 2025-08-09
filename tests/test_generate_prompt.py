@@ -6,7 +6,7 @@ from obk.cli import ObkCLI
 runner = CliRunner()
 
 def _count_artifacts(root: Path):
-    prompts = list(root.glob("prompts/*/*/*/*.xml"))
+    prompts = list(root.glob("prompts/*/*/*/*.md"))
     tasks = list(root.glob("tasks/*/*/*/*"))
     return prompts, tasks
 
@@ -39,7 +39,7 @@ def test_generate_prompt_with_date_and_id_exact_paths(tmp_path: Path, monkeypatc
     result = runner.invoke(app, ["generate", "prompt", "--date", "2025-08-09", "--id", tid])
     assert result.exit_code == 0, result.output
 
-    pf = tmp_path / "prompts" / "2025" / "08" / "09" / f"{tid}.xml"
+    pf = tmp_path / "prompts" / "2025" / "08" / "09" / f"{tid}.md"
     tf = tmp_path / "tasks" / "2025" / "08" / "09" / tid
     assert pf.exists(), f"missing prompt file: {pf}"
     assert tf.exists(), f"missing task folder: {tf}"
@@ -105,7 +105,7 @@ def test_generate_prompt_print_paths_outputs_two_lines(tmp_path: Path, monkeypat
     pf = Path(lines[0])
     tf = Path(lines[1])
     assert pf.exists() and tf.exists()
-    assert pf.name == f"{tid}.xml" and tf.name == tid
+    assert pf.name == f"{tid}.md" and tf.name == tid
     s = str(pf).replace("\\", "/")
     t = str(tf).replace("\\", "/")
     assert "prompts/2025/08/09" in s and "tasks/2025/08/09" in t
@@ -135,7 +135,7 @@ def test_generate_prompt_dry_run_print_paths_only_two_lines_and_no_writes(
     assert len(lines) == 2
 
     # Ensure nothing was written
-    assert not list(tmp_path.glob("prompts/*/*/*/*.xml"))
+    assert not list(tmp_path.glob("prompts/*/*/*/*.md"))
     assert not list(tmp_path.glob("tasks/*/*/*/*"))
 
 def test_generate_prompt_missing_root_fails(tmp_path: Path, monkeypatch):

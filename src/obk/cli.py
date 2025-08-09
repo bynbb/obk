@@ -446,7 +446,7 @@ class ObkCLI:
 
         prompts_dir = project_root / "prompts" / year / month / day
         tasks_dir = project_root / "tasks" / year / month / day
-        prompt_file = prompts_dir / f"{tid}.xml"
+        prompt_file = prompts_dir / f"{tid}.md"
         task_folder = tasks_dir / tid
 
         # Skip collision check during dry-run
