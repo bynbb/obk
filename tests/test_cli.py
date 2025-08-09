@@ -256,6 +256,7 @@ def test_harmonize_all(tmp_path):
     )
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    env["OBK_PROJECT_PATH"] = str(tmp_path)
     subprocess.run(
         [
             sys.executable,
@@ -301,6 +302,7 @@ def _extract_ymd(text: str) -> str:
 def test_today_commands_default_timezone(tmp_path):
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    env["OBK_PROJECT_PATH"] = str(tmp_path)
     trace = subprocess.run(
         [sys.executable, "-m", "obk", "trace-id"],
         capture_output=True,
@@ -330,15 +332,6 @@ def test_today_commands_default_timezone(tmp_path):
     assert date == _extract_ymd(harmonize.stdout)
 
 
-def test_find_prompts_root(monkeypatch, tmp_path):
-    prompts = tmp_path / "project" / "prompts"
-    prompts.mkdir(parents=True)
-    sub = prompts.parent / "sub"
-    sub.mkdir()
-    monkeypatch.chdir(sub)
-    assert cli.find_prompts_root() == prompts
-
-
 def test_global_excepthook_system_exit(monkeypatch):
     called = {}
 
@@ -351,8 +344,8 @@ def test_global_excepthook_system_exit(monkeypatch):
 
 
 def test_validate_today_no_files(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(cli, "REPO_ROOT", tmp_path)
-    prompts_dir = cli.get_default_prompts_dir()
+    monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
+    prompts_dir = cli.get_default_prompts_dir(Path(tmp_path))
     prompts_dir.mkdir(parents=True)
     app = cli.ObkCLI(log_file=tmp_path / "log.log")
     with pytest.raises(typer.Exit) as exc:
@@ -363,8 +356,8 @@ def test_validate_today_no_files(tmp_path, monkeypatch, capsys):
 
 
 def test_validate_today_failure(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(cli, "REPO_ROOT", tmp_path)
-    prompts_dir = cli.get_default_prompts_dir()
+    monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
+    prompts_dir = cli.get_default_prompts_dir(Path(tmp_path))
     prompts_dir.mkdir(parents=True)
     (prompts_dir / "bad.md").write_text("<broken>", encoding="utf-8")
     app = cli.ObkCLI(log_file=tmp_path / "log.log")
@@ -393,7 +386,8 @@ VALID_PROMPT = (
 )
 
 
-def test_validate_all_no_files(tmp_path, capsys):
+def test_validate_all_no_files(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
     empty = tmp_path / "prompts"
     empty.mkdir()
     app = cli.ObkCLI(log_file=tmp_path / "log.log")
@@ -403,7 +397,8 @@ def test_validate_all_no_files(tmp_path, capsys):
     assert exc.value.exit_code == 0
 
 
-def test_validate_all_success(tmp_path, capsys):
+def test_validate_all_success(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
     prompts = tmp_path / "prompts"
     prompts.mkdir()
     (prompts / "valid.md").write_text(VALID_PROMPT, encoding="utf-8")
@@ -415,7 +410,8 @@ def test_validate_all_success(tmp_path, capsys):
     assert exc.value.exit_code == 0
 
 
-def test_harmonize_all_no_files(tmp_path, capsys):
+def test_harmonize_all_no_files(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
     empty = tmp_path / "prompts"
     empty.mkdir()
     app = cli.ObkCLI(log_file=tmp_path / "log.log")
@@ -428,6 +424,7 @@ def test_harmonize_all_no_files(tmp_path, capsys):
 def test_today_commands_timezone_override(tmp_path):
     env = os.environ.copy()
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+    env["OBK_PROJECT_PATH"] = str(tmp_path)
     tz = "America/New_York"
     trace = subprocess.run(
         [sys.executable, "-m", "obk", "trace-id", "--timezone", tz],

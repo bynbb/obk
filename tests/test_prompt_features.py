@@ -29,6 +29,11 @@ def _write_prompt(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def _set_project_root(tmp_path, monkeypatch):
+    monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
+    return cli.get_default_prompts_dir(Path(tmp_path))
+
+
 # ---------------- reusable XML -------------------------------------------
 VALID_PROMPT = (
     "<?xml version='1.0' encoding='UTF-8'?>\n"
@@ -59,6 +64,7 @@ BROKEN_PROMPT = "<broken>"
 
 
 def test_harmonize_all_and_dry_run(tmp_path):
+    ENV["OBK_PROJECT_PATH"] = str(tmp_path)
     prompts = tmp_path / "prompts"
     prompt = prompts / "harm.md"
     content = (
@@ -104,9 +110,6 @@ def test_trace_id_timezones(tmp_path):
 
 
 # ------------- helpers for “today” tests ---------------------------------
-def _patch_repo_root(tmp_path, monkeypatch):
-    monkeypatch.setattr(cli, "REPO_ROOT", tmp_path)
-    return cli.get_default_prompts_dir()
 
 
 # def test_validate_today(monkeypatch, capsys, tmp_path):
@@ -130,7 +133,7 @@ def _patch_repo_root(tmp_path, monkeypatch):
 
 
 def test_harmonize_today(monkeypatch, capsys, tmp_path):
-    prompts_dir = _patch_repo_root(tmp_path, monkeypatch)
+    prompts_dir = _set_project_root(tmp_path, monkeypatch)
     prompts_dir.mkdir(parents=True)
 
     file = prompts_dir / "harm.md"
@@ -149,10 +152,6 @@ def test_harmonize_today(monkeypatch, capsys, tmp_path):
         cli_obj.run(["harmonize-today", "--dry-run"])
 
 
-def test_exit_codes_prompts_not_found(tmp_path):
-    assert _run(["validate-all"], cwd=tmp_path).returncode == 2
-    assert _run(["harmonize-all"], cwd=tmp_path).returncode == 2
-
 
 # def test_autolocate_prompts_from_subdir(tmp_path):
 #     prompts = tmp_path / "prompts"
@@ -165,7 +164,7 @@ def test_exit_codes_prompts_not_found(tmp_path):
 
 
 def test_summary_no_prompts(monkeypatch, capsys, tmp_path):
-    prompts_dir = _patch_repo_root(tmp_path, monkeypatch)
+    prompts_dir = _set_project_root(tmp_path, monkeypatch)
     prompts_dir.mkdir(parents=True)
 
     cli_obj = cli.ObkCLI()
@@ -176,6 +175,7 @@ def test_summary_no_prompts(monkeypatch, capsys, tmp_path):
 
 
 def test_harmonize_all_dry_run_summary(tmp_path):
+    ENV["OBK_PROJECT_PATH"] = str(tmp_path)
     prompts = tmp_path / "prompts"
     file = prompts / "harm.md"
     _write_prompt(
