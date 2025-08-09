@@ -7,7 +7,10 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import tomllib
+try:
+    import tomllib  # py311+
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
 import typer
 
 from .containers import Container
@@ -47,12 +50,19 @@ def _load_config() -> dict[str, str]:
     return {}
 
 
+def _toml_lit(s: str) -> str:
+    return "'" + s.replace("'", "''") + "'"
+
+
 def _write_config(data: dict[str, str]) -> None:
     cfg = _get_config_file()
     cfg.parent.mkdir(parents=True, exist_ok=True)
     with cfg.open("w", encoding="utf-8") as fh:
         for key, value in data.items():
-            fh.write(f'{key} = "{value}"\n')
+            if key == "project_path":
+                fh.write(f"{key} = {_toml_lit(str(value))}\n")
+            else:
+                fh.write(f'{key} = "{value}"\n')
 
 
 def get_default_prompts_dir(project_root: Path, timezone: str = "UTC") -> Path:
@@ -70,12 +80,18 @@ def resolve_project_root(*, with_source: bool = False):
     env_path = os.environ.get("OBK_PROJECT_PATH")
     if env_path:
         path = Path(env_path).expanduser()
+        if not path.is_dir():
+            typer.echo(f"❌ Configured project path does not exist: {path}", err=True)
+            raise typer.Exit(code=1)
         return (path, "environment variable") if with_source else path
 
     config = _load_config()
     cfg_path = config.get("project_path")
     if cfg_path:
         path = Path(cfg_path).expanduser()
+        if not path.is_dir():
+            typer.echo(f"❌ Configured project path does not exist: {path}", err=True)
+            raise typer.Exit(code=1)
         return (path, "config file") if with_source else path
 
     typer.echo(
@@ -229,7 +245,10 @@ class ObkCLI:
                 cfg.unlink()
             typer.echo("Project path unset.")
             raise typer.Exit(code=0)
-        project_path = Path.cwd() if here else Path(path)
+        project_path = Path.cwd() if here else Path(path).expanduser()
+        if not project_path.is_dir():
+            typer.echo(f"❌ Not a directory: {project_path}", err=True)
+            raise typer.Exit(code=1)
         _write_config({"project_path": str(project_path)})
         typer.echo(f"Project path set to: {project_path}")
         raise typer.Exit(code=0)
