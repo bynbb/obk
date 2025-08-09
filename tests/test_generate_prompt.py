@@ -84,14 +84,59 @@ def test_generate_prompt_print_paths_outputs_two_lines(tmp_path: Path, monkeypat
     monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
     app = ObkCLI().app
 
-    r = runner.invoke(app, [
-        "generate", "prompt", "--date", "2025-08-09",
-        "--id", "20250809T010203+0000", "--print-paths"
-    ])
+    tid = "20250809T010203+0000"
+    r = runner.invoke(
+        app,
+        [
+            "generate",
+            "prompt",
+            "--date",
+            "2025-08-09",
+            "--id",
+            tid,
+            "--print-paths",
+        ],
+    )
     assert r.exit_code == 0, r.output
-    # Should print at least two lines: prompt path then task folder path
+
     lines = [ln for ln in r.output.splitlines() if ln.strip()]
-    assert len(lines) >= 2, f"expected at least 2 lines, got: {lines[:5]}"
+    assert len(lines) == 2, f"expected exactly 2 lines, got: {lines}"
+
+    pf = Path(lines[0])
+    tf = Path(lines[1])
+    assert pf.exists() and tf.exists()
+    assert pf.name == f"{tid}.xml" and tf.name == tid
+    s = str(pf).replace("\\", "/")
+    t = str(tf).replace("\\", "/")
+    assert "prompts/2025/08/09" in s and "tasks/2025/08/09" in t
+
+
+def test_generate_prompt_dry_run_print_paths_only_two_lines_and_no_writes(
+    tmp_path: Path, monkeypatch
+):
+    monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
+    app = ObkCLI().app
+
+    r = runner.invoke(
+        app,
+        [
+            "generate",
+            "prompt",
+            "--date",
+            "2025-08-09",
+            "--id",
+            "20250809T010203+0000",
+            "--dry-run",
+            "--print-paths",
+        ],
+    )
+    assert r.exit_code == 0, r.output
+    lines = [ln for ln in r.output.splitlines() if ln.strip()]
+    assert len(lines) == 2
+
+    # Ensure nothing was written
+    assert not list(tmp_path.glob("prompts/*/*/*/*.xml"))
+    assert not list(tmp_path.glob("tasks/*/*/*/*"))
 
 def test_generate_prompt_missing_root_fails(tmp_path: Path, monkeypatch):
     # Ensure env and config are not pointing to a valid project

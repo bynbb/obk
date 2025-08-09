@@ -409,7 +409,7 @@ class ObkCLI:
     def _cmd_generate_prompt(
         self,
         date: str | None = typer.Option(None, "--date", help="Override UTC date"),
-        id: str | None = typer.Option(
+        trace_id: str | None = typer.Option(
             None, "--id", help="Use specific ID; otherwise auto-generate"
         ),
         force: bool = typer.Option(False, "--force", help="Overwrite prompt file"),
@@ -436,34 +436,26 @@ class ObkCLI:
         month = f"{dt.month:02}"
         day = f"{dt.day:02}"
 
-        if id:
-            if not re.fullmatch(r"\d{8}T\d{6}[+-]\d{4}", id):
-                typer.echo(f"❌ Invalid trace id format: {id}", err=True)
-                raise typer.Exit(code=1)
-            tid = id
-        else:
+        if trace_id is None:
             tid = generate_trace_id("UTC")
+        else:
+            if not re.fullmatch(r"\d{8}T\d{6}[+-]\d{4}", trace_id):
+                typer.echo(f"❌ Invalid trace id format: {trace_id}", err=True)
+                raise typer.Exit(code=1)
+            tid = trace_id
 
         prompts_dir = project_root / "prompts" / year / month / day
         tasks_dir = project_root / "tasks" / year / month / day
         prompt_file = prompts_dir / f"{tid}.xml"
         task_folder = tasks_dir / tid
 
-        if prompt_file.exists() and not force:
+        # Skip collision check during dry-run
+        if prompt_file.exists() and not force and not dry_run:
             typer.echo(
                 f"❌ Prompt already exists: {prompt_file}. Use --force to overwrite.",
                 err=True,
             )
             raise typer.Exit(code=1)
-
-        tmpl_path = importlib.resources.files("obk.templates").joinpath("prompt.xml")
-        try:
-            template = tmpl_path.read_text(encoding="utf-8")
-        except Exception as exc:
-            typer.echo(f"❌ Template load error: {exc}", err=True)
-            raise typer.Exit(code=1)
-
-        content = template.replace("__TRACE_ID__", tid)
 
         logging.getLogger(__name__).info(
             "Generate prompt date=%s id=%s prompt=%s task=%s force=%s dry_run=%s",
@@ -475,12 +467,25 @@ class ObkCLI:
             dry_run,
         )
 
-        if not dry_run:
-            prompts_dir.mkdir(parents=True, exist_ok=True)
-            task_folder.mkdir(parents=True, exist_ok=True)
-            with prompt_file.open("w", encoding="utf-8", newline="\n") as fh:
-                fh.write(content)
+        if dry_run:
+            if print_paths:
+                typer.echo(str(prompt_file.resolve()))
+                typer.echo(str(task_folder.resolve()))
+            else:
+                typer.echo(f"Would create: {prompt_file.resolve()}")
+                typer.echo(f"Would ensure: {task_folder.resolve()}")
+            raise typer.Exit(code=0)
 
+        # Real writes
+        prompts_dir.mkdir(parents=True, exist_ok=True)
+        task_folder.mkdir(parents=True, exist_ok=True)
+        content = importlib.resources.files("obk.templates").joinpath("prompt.xml").read_text(
+            encoding="utf-8"
+        ).replace("__TRACE_ID__", tid)
+        with prompt_file.open("w", encoding="utf-8", newline="\n") as fh:
+            fh.write(content)
+
+        # Output
         if print_paths:
             typer.echo(str(prompt_file.resolve()))
             typer.echo(str(task_folder.resolve()))
