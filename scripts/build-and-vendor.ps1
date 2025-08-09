@@ -33,8 +33,8 @@ New-Item -ItemType Directory -Force -Path dist | Out-Null
 # Isolated build venv
 $venv = Join-Path $repoRoot ".venv_build"
 if (-not (Test-Path $venv)) { python -m venv $venv }
-$py  = Join-Path $venv "Scripts\python.exe"
-$pip = Join-Path $venv "Scripts\pip.exe"
+$py  = Join-Path $venv "Scripts" "python.exe"
+$pip = Join-Path $venv "Scripts" "pip.exe"
 
 & $py -m pip install -U pip wheel build | Out-Null
 
@@ -42,7 +42,7 @@ Write-Host "🛠️  Building (wheel + sdist) ..."
 & $py -m build
 
 # Extract [project].dependencies from pyproject.toml via temp script
-$reqFile = Join-Path $repoRoot "dist\runtime-requirements.txt"
+$reqFile = Join-Path $repoRoot "dist" "runtime-requirements.txt"
 $tmpPy   = Join-Path $env:TEMP ("extract_deps_{0}.py" -f ([guid]::NewGuid().ToString("N")))
 
 $pyCode = @'
@@ -70,6 +70,7 @@ try {
 }
 
 $deps | Set-Content -Encoding UTF8 $reqFile
+Write-Host "📦 Found dependencies:" ($deps -join ", ")
 
 # Helper to run pip download with extra args
 function Invoke-PipDownload {
@@ -90,7 +91,8 @@ if ($IncludeLinuxWheels) {
   Invoke-PipDownload @(
     "--platform", "manylinux2014_x86_64",
     "--implementation", "cp",
-    "--python-version", "311"
+    "--python-version", "311",
+    "--abi", "cp311"
   )
 }
 

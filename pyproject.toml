@@ -15,6 +15,11 @@ dependencies = [
     "dependency-injector>=4.41",
     "xmlschema>=3.2",
     "tzdata>=2024.1",
+    "pytest>=7.0.0",
+    "pluggy>=1.0.0",
+    "iniconfig>=2.0.0",
+    "packaging>=24.0",
+    "colorama>=0.4.6",
 ]
 
 [project.scripts]
