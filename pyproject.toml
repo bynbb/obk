@@ -28,7 +28,10 @@ obk = "obk.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/obk"]
-include = ["src/obk/xsd/*.xsd"]
+include = [
+  "src/obk/xsd/*.xsd",
+  "src/obk/templates/*.xml",
+]
 
 [tool.hatch.envs.default]
 dependencies = [
