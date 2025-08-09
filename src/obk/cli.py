@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import importlib.resources
+import re
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -198,6 +200,24 @@ class ObkCLI:
             short_help="Generate trace ID",
         )(self._cmd_trace_id)
 
+        self.generate_app = typer.Typer()
+        self.app.add_typer(
+            self.generate_app,
+            name="generate",
+            help="Generate artifacts",
+            short_help="Generate artifacts",
+        )
+        self.generate_app.command(
+            name="prompt",
+            help="Generate prompt file and matching task folder",
+            short_help="Generate prompt file",
+        )(self._cmd_generate_prompt)
+        self.app.command(
+            name="generate-prompt",
+            help="Generate prompt file and matching task folder",
+            short_help="Generate prompt file",
+        )(self._cmd_generate_prompt)
+
     def _callback(
         self, logfile: Path = typer.Option(LOG_FILE, help="Path to the log file")
     ) -> None:
@@ -384,6 +404,90 @@ class ObkCLI:
         )
         if dry_run:
             typer.echo("Dry run: No files were modified.\n")
+        raise typer.Exit(code=0)
+
+    def _cmd_generate_prompt(
+        self,
+        date: str | None = typer.Option(None, "--date", help="Override UTC date"),
+        id: str | None = typer.Option(
+            None, "--id", help="Use specific ID; otherwise auto-generate"
+        ),
+        force: bool = typer.Option(False, "--force", help="Overwrite prompt file"),
+        dry_run: bool = typer.Option(
+            False, "--dry-run", help="Print actions; no writes"
+        ),
+        print_paths: bool = typer.Option(
+            False, "--print-paths", help="Print abs paths for prompt + task"
+        ),
+    ) -> None:
+        project_root = resolve_project_root()
+        if date:
+            try:
+                dt = datetime.strptime(date, "%Y-%m-%d")
+            except ValueError:
+                typer.echo(
+                    "❌ Invalid --date format. Expected YYYY-MM-DD (UTC).",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+        else:
+            dt = datetime.now(ZoneInfo("UTC"))
+        year = f"{dt.year:04}"
+        month = f"{dt.month:02}"
+        day = f"{dt.day:02}"
+
+        if id:
+            if not re.fullmatch(r"\d{8}T\d{6}[+-]\d{4}", id):
+                typer.echo(f"❌ Invalid trace id format: {id}", err=True)
+                raise typer.Exit(code=1)
+            tid = id
+        else:
+            tid = generate_trace_id("UTC")
+
+        prompts_dir = project_root / "prompts" / year / month / day
+        tasks_dir = project_root / "tasks" / year / month / day
+        prompt_file = prompts_dir / f"{tid}.xml"
+        task_folder = tasks_dir / tid
+
+        if prompt_file.exists() and not force:
+            typer.echo(
+                f"❌ Prompt already exists: {prompt_file}. Use --force to overwrite.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+
+        tmpl_path = importlib.resources.files("obk.templates").joinpath("prompt.xml")
+        try:
+            template = tmpl_path.read_text(encoding="utf-8")
+        except Exception as exc:
+            typer.echo(f"❌ Template load error: {exc}", err=True)
+            raise typer.Exit(code=1)
+
+        content = template.replace("__TRACE_ID__", tid)
+
+        logging.getLogger(__name__).info(
+            "Generate prompt date=%s id=%s prompt=%s task=%s force=%s dry_run=%s",
+            dt.date().isoformat(),
+            tid,
+            prompt_file,
+            task_folder,
+            force,
+            dry_run,
+        )
+
+        if not dry_run:
+            prompts_dir.mkdir(parents=True, exist_ok=True)
+            task_folder.mkdir(parents=True, exist_ok=True)
+            with prompt_file.open("w", encoding="utf-8", newline="\n") as fh:
+                fh.write(content)
+
+        if print_paths:
+            typer.echo(str(prompt_file.resolve()))
+            typer.echo(str(task_folder.resolve()))
+        else:
+            typer.echo(f"✅ Created: {prompt_file.resolve()}")
+            typer.echo(f"📂 Ensured: {task_folder.resolve()}")
+
         raise typer.Exit(code=0)
 
     def _cmd_trace_id(

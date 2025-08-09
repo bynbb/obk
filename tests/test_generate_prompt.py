@@ -1,5 +1,3 @@
-import os
-import re
 from pathlib import Path
 from typer.testing import CliRunner
 
@@ -86,9 +84,12 @@ def test_generate_prompt_print_paths_outputs_two_lines(tmp_path: Path, monkeypat
     monkeypatch.setenv("OBK_PROJECT_PATH", str(tmp_path))
     app = ObkCLI().app
 
-    r = runner.invoke(app, ["generate", "prompt", "--date", "2025-08-09", "--id", "20250809T010203+0000", "--print-paths"])
+    r = runner.invoke(app, [
+        "generate", "prompt", "--date", "2025-08-09",
+        "--id", "20250809T010203+0000", "--print-paths"
+    ])
     assert r.exit_code == 0, r.output
-    # Should print exactly two lines: prompt path then task folder path
+    # Should print at least two lines: prompt path then task folder path
     lines = [ln for ln in r.output.splitlines() if ln.strip()]
     assert len(lines) >= 2, f"expected at least 2 lines, got: {lines[:5]}"
 
