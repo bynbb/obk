@@ -4,13 +4,6 @@
 
 Implement a new CLI command `set-project-path` that explicitly manages the project root path for all prompt-based commands in the `obk` CLI, replacing the deprecated “walk up” search entirely. 
 
-* * *
-
-### Prompt file
-
-* The prompt file `20250809T142525+0000.md` can be used for further insights into expected behaviors for this task. 
-
-
 
 ### **Implementation Steps**
 
