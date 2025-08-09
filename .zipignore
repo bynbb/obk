@@ -1,0 +1,35 @@
+# --- Version control ---
+.git/
+.github/
+.husky/
+
+# --- Python caches ---
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Build artifacts ---
+build/
+# dist/
+*.egg-info/
+
+# --- Node/JS artifacts ---
+node_modules/
+*.lock
+
+# --- Virtual environments ---
+.venv/
+venv/
+
+# --- Logs and temp files ---
+*.log
+*.tmp
+*.temp
+*.bak
+
+# --- IDE/editor files ---
+.vscode/
+.idea/
+*.swp
+*.swo
