@@ -1,29 +1,74 @@
 from __future__ import annotations
 
-import sys
 import logging
-from pathlib import Path
+import os
+import sys
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
+try:
+    import tomllib  # py311+
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
 import typer
 
 from .containers import Container
+from .harmonize import harmonize_text
+from .preprocess import preprocess_text, postprocess_text
 from .services import DivisionByZeroError, FatalError
 from .trace_id import generate_trace_id
 from .validation import validate_all
-from .preprocess import preprocess_text, postprocess_text
-from .harmonize import harmonize_text
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
 # Default log file path is relative to the current working directory
 LOG_FILE = Path("obk.log")
 
 
-def get_default_prompts_dir(timezone: str = "UTC"):
+def _get_config_dir() -> Path:
+    try:  # pragma: no cover
+        from platformdirs import user_config_dir
+
+        return Path(user_config_dir("obk"))
+    except Exception:  # pragma: no cover
+        if os.name == "nt":
+            base = Path(os.getenv("APPDATA", Path.home() / "AppData" / "Roaming"))
+            return base / "obk"
+        return Path.home() / ".config" / "obk"
+
+
+def _get_config_file() -> Path:
+    return _get_config_dir() / "config.toml"
+
+
+def _load_config() -> dict[str, str]:
+    cfg = _get_config_file()
+    if cfg.exists():
+        try:
+            return tomllib.loads(cfg.read_text(encoding="utf-8"))
+        except Exception:  # pragma: no cover
+            return {}
+    return {}
+
+
+def _toml_lit(s: str) -> str:
+    return "'" + s.replace("'", "''") + "'"
+
+
+def _write_config(data: dict[str, str]) -> None:
+    cfg = _get_config_file()
+    cfg.parent.mkdir(parents=True, exist_ok=True)
+    with cfg.open("w", encoding="utf-8") as fh:
+        for key, value in data.items():
+            if key == "project_path":
+                fh.write(f"{key} = {_toml_lit(str(value))}\n")
+            else:
+                fh.write(f'{key} = "{value}"\n')
+
+
+def get_default_prompts_dir(project_root: Path, timezone: str = "UTC") -> Path:
     now = datetime.now(ZoneInfo("UTC")).astimezone(ZoneInfo(timezone))
     return (
-        REPO_ROOT
+        project_root
         / "prompts"
         / f"{now.year:04}"
         / f"{now.month:02}"
@@ -31,16 +76,31 @@ def get_default_prompts_dir(timezone: str = "UTC"):
     )
 
 
-def find_prompts_root() -> Path:
-    """Search upwards from CWD for the 'prompts' directory."""
-    cwd = Path.cwd()
-    for parent in [cwd] + list(cwd.parents):
-        candidate = parent / "prompts"
-        if candidate.is_dir():
-            return candidate
-    raise FileNotFoundError(
-        "Could not find 'prompts' directory. Please run this command from within your project tree."
+def resolve_project_root(*, with_source: bool = False):
+    env_path = os.environ.get("OBK_PROJECT_PATH")
+    if env_path:
+        path = Path(env_path).expanduser()
+        if not path.is_dir():
+            typer.echo(f"❌ Configured project path does not exist: {path}", err=True)
+            raise typer.Exit(code=1)
+        return (path, "environment variable") if with_source else path
+
+    config = _load_config()
+    cfg_path = config.get("project_path")
+    if cfg_path:
+        path = Path(cfg_path).expanduser()
+        if not path.is_dir():
+            typer.echo(f"❌ Configured project path does not exist: {path}", err=True)
+            raise typer.Exit(code=1)
+        return (path, "config file") if with_source else path
+
+    typer.echo(
+        "❌ No project path configured. Run `obk set-project-path --here` or use --path <dir>.",
+        err=True,
     )
+    raise typer.Exit(code=1)
+
+
 
 
 def configure_logging(log_file: Path) -> None:
@@ -108,6 +168,11 @@ class ObkCLI:
             short_help="Greet by name",
         )(self._cmd_greet)
         self.app.command(
+            name="set-project-path",
+            help="Manage project root path",
+            short_help="Configure project root",
+        )(self._cmd_set_project_path)
+        self.app.command(
             name="validate-today",
             help="Validate today's prompt files only",
             short_help="Validate today's prompts",
@@ -156,13 +221,46 @@ class ObkCLI:
         greeter = self.container.greeter()
         typer.echo(greeter.greet(name, excited))
 
+    def _cmd_set_project_path(
+        self,
+        path: Path | None = typer.Option(None, "--path", help="Set project root explicitly"),
+        here: bool = typer.Option(False, "--here", help="Set project root to the current directory"),
+        unset: bool = typer.Option(False, "--unset", help="Clear the stored project root"),
+        show: bool = typer.Option(False, "--show", help="Display the effective project root"),
+    ) -> None:
+        opts = [path is not None, here, unset, show]
+        if sum(opts) != 1:
+            typer.echo(
+                "Specify exactly one of --path, --here, --unset, or --show",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        if show:
+            root, source = resolve_project_root(with_source=True)
+            typer.echo(f"{root} (from {source})")
+            raise typer.Exit(code=0)
+        if unset:
+            cfg = _get_config_file()
+            if cfg.exists():
+                cfg.unlink()
+            typer.echo("Project path unset.")
+            raise typer.Exit(code=0)
+        project_path = Path.cwd() if here else Path(path).expanduser()
+        if not project_path.is_dir():
+            typer.echo(f"❌ Not a directory: {project_path}", err=True)
+            raise typer.Exit(code=1)
+        _write_config({"project_path": str(project_path)})
+        typer.echo(f"Project path set to: {project_path}")
+        raise typer.Exit(code=0)
+
     def _cmd_validate_today(
         self,
         timezone: str = typer.Option(
             "UTC", "--timezone", "-tz", help="Timezone for 'today' prompt folder (default: UTC)"
         ),
     ) -> None:
-        prompts_dir = get_default_prompts_dir(timezone)
+        project_root = resolve_project_root()
+        prompts_dir = get_default_prompts_dir(project_root, timezone)
         typer.echo(
             f"Validating today's prompts under: {prompts_dir.resolve()} (timezone: {timezone})"
         )
@@ -188,12 +286,9 @@ class ObkCLI:
             None, help="Path to the prompts directory"
         ),
     ) -> None:
+        project_root = resolve_project_root()
         if prompts_dir is None:
-            try:
-                prompts_dir = find_prompts_root()
-            except FileNotFoundError as e:
-                typer.echo(f"[ERROR] {e}", err=True)
-                raise typer.Exit(code=2)
+            prompts_dir = project_root / "prompts"
         else:
             prompts_dir = Path(prompts_dir)
         typer.echo(f"Validating ALL prompts under: {prompts_dir.resolve()}")
@@ -218,7 +313,8 @@ class ObkCLI:
             "UTC", "--timezone", "-tz", help="Timezone for 'today' prompt folder (default: UTC)"
         ),
     ) -> None:
-        prompts_dir = get_default_prompts_dir(timezone)
+        project_root = resolve_project_root()
+        prompts_dir = get_default_prompts_dir(project_root, timezone)
         typer.echo(
             f"Harmonizing TODAY's prompts under: {prompts_dir.resolve()} (timezone: {timezone})"
         )
@@ -256,12 +352,9 @@ class ObkCLI:
         ),
         dry_run: bool = typer.Option(False, help="Show changes without saving"),
     ) -> None:
+        project_root = resolve_project_root()
         if prompts_dir is None:
-            try:
-                prompts_dir = find_prompts_root()
-            except FileNotFoundError as e:
-                typer.echo(f"[ERROR] {e}", err=True)
-                raise typer.Exit(code=2)
+            prompts_dir = project_root / "prompts"
         else:
             prompts_dir = Path(prompts_dir)
 
